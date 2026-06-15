@@ -26,6 +26,8 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.jpa.domain.Specification;
 
 final class RsqlSearchGuard {
+    private static final String DEFINITION_MUST_NOT_BE_NULL = "definition must not be null";
+
     private final SearchRsqlEngine engine;
     private final SearchPolicy policy;
     private final List<SearchDefinitionValidator> definitionValidators;
@@ -75,7 +77,7 @@ final class RsqlSearchGuard {
     }
 
     public void validateDefinition(SearchDefinition<?> definition) {
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         synchronized (validatedDefinitions) {
             if (validatedDefinitions.containsKey(definition)) {
                 return;
@@ -89,7 +91,7 @@ final class RsqlSearchGuard {
     }
 
     public <T> Specification<T> specification(String rsql, SearchDefinition<T> definition) {
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         SearchPolicy effectivePolicy = effectivePolicy(definition);
         SearchProtectionContext protection = new SearchProtectionContext(effectivePolicy, SearchCompilationMode.PAGE);
         return specification(rsql, definition, protection);
@@ -99,7 +101,7 @@ final class RsqlSearchGuard {
             String rsql,
             SearchDefinition<T> definition,
             SearchProtectionContext protection) {
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         Objects.requireNonNull(protection, "protection must not be null");
         SearchPolicy effectivePolicy = protection.policy();
 
@@ -192,38 +194,44 @@ final class RsqlSearchGuard {
     }
 
     private void preflight(String rsql, SearchPolicy.Rsql limits) {
-        if (rsql == null || rsql.length() > limits.maxLength()) {
+        if (rsql == null) {
             throw limitExceeded();
         }
+        if (exceedsLength(rsql, limits.maxLength())
+                || exceedsParenthesesDepth(rsql, limits.maxParenthesesDepth())) {
+            throw limitExceeded();
+        }
+    }
 
+    private static boolean exceedsLength(String rsql, int maxLength) {
+        return rsql.length() > maxLength;
+    }
+
+    private static boolean exceedsParenthesesDepth(String rsql, int maxParenthesesDepth) {
         int depth = 0;
-        char quote = 0;
-        boolean escaped = false;
+        RsqlPreflightScanner scanner = new RsqlPreflightScanner();
         for (int index = 0; index < rsql.length(); index++) {
             char current = rsql.charAt(index);
-            if (escaped) {
-                escaped = false;
+            if (scanner.consumeQuoted(current)) {
                 continue;
             }
-            if (quote != 0) {
-                if (current == '\\') {
-                    escaped = true;
-                } else if (current == quote) {
-                    quote = 0;
-                }
-                continue;
-            }
-            if (current == '\'' || current == '"') {
-                quote = current;
-            } else if (current == '(') {
-                depth++;
-                if (depth > limits.maxParenthesesDepth()) {
-                    throw limitExceeded();
-                }
-            } else if (current == ')' && depth > 0) {
-                depth--;
+
+            depth = adjustedParenthesesDepth(depth, current);
+            if (depth > maxParenthesesDepth) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private static int adjustedParenthesesDepth(int depth, char current) {
+        if (current == '(') {
+            return depth + 1;
+        }
+        if (current == ')' && depth > 0) {
+            return depth - 1;
+        }
+        return depth;
     }
 
     private RsqlFilterValidationException rulesForbidden(List<RsqlValidationError> errors) {
@@ -237,5 +245,42 @@ final class RsqlSearchGuard {
         return new RsqlFilterValidationException(
                 RsqlFilterValidationException.LIMIT_EXCEEDED,
                 "RSQL filter exceeds configured safety limits.");
+    }
+
+    private static final class RsqlPreflightScanner {
+        private char quote;
+        private boolean escaped;
+
+        private boolean consumeQuoted(char current) {
+            if (escaped) {
+                escaped = false;
+                return true;
+            }
+            if (isQuoted()) {
+                consumeWithinQuote(current);
+                return true;
+            }
+            if (isQuote(current)) {
+                quote = current;
+                return true;
+            }
+            return false;
+        }
+
+        private boolean isQuoted() {
+            return quote != 0;
+        }
+
+        private void consumeWithinQuote(char current) {
+            if (current == '\\') {
+                escaped = true;
+            } else if (current == quote) {
+                quote = 0;
+            }
+        }
+
+        private static boolean isQuote(char current) {
+            return current == '\'' || current == '"';
+        }
     }
 }
