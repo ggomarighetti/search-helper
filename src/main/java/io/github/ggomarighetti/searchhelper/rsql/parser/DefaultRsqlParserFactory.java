@@ -7,6 +7,7 @@ import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorRegistry;
 public final class DefaultRsqlParserFactory implements RsqlParserFactory {
     /** Creates the default parser factory. */
     public DefaultRsqlParserFactory() {
+        // Stateless factory; no initialization is required.
     }
 
     @Override

@@ -3,9 +3,6 @@ package io.github.ggomarighetti.searchhelper.definition;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -113,12 +110,7 @@ public final class SearchPath {
 
     private static ResolvedPath resolve(Class<?> entity, String selector, String path, SearchPolicy.Paths limits) {
         String[] segments = path.split("\\.");
-        if (segments.length > limits.maxDepth()) {
-            throw new SearchDefinitionValidationException(
-                    SearchDefinitionValidationException.PATH_LIMIT_EXCEEDED,
-                    "selector '%s' path '%s' exceeds maximum path depth of %d"
-                            .formatted(selector, path, limits.maxDepth()));
-        }
+        validateDepth(selector, path, limits, segments.length);
         Class<?> current = entity;
         boolean traversesCollection = false;
         boolean collectionValued = false;
@@ -127,44 +119,24 @@ public final class SearchPath {
         StringBuilder resolvedPrefix = new StringBuilder();
         for (int index = 0; index < segments.length; index++) {
             String segment = segments[index];
-            if (segment.isBlank()) {
-                throw unresolved(entity, selector, path);
-            }
-            ResolvedSegment resolved = resolveSegment(current, segment);
-            if (resolved == null) {
-                throw unresolved(entity, selector, path);
-            }
+            ResolvedSegment resolved = resolveRequiredSegment(current, segment, entity, selector, path);
             Class<?> resolvedType = resolved.type();
             collectionValued = isCollectionValued(resolvedType);
-            if (!resolvedPrefix.isEmpty()) {
-                resolvedPrefix.append('.');
-            }
-            resolvedPrefix.append(segment);
-            boolean toMany = collectionValued || resolved.hasAnyAnnotation(
-                    OneToMany.class,
-                    ManyToMany.class,
-                    ElementCollection.class);
-            boolean association = toMany
-                    || resolved.hasAnyAnnotation(ManyToOne.class, OneToOne.class)
-                    || resolvedType.isAnnotationPresent(Entity.class);
-            boolean embedded = resolved.hasAnyAnnotation(Embedded.class, EmbeddedId.class)
-                    || resolvedType.isAnnotationPresent(Embeddable.class);
-            if (association) {
-                joinedPaths.add(resolvedPrefix.toString());
-            }
-            if (toMany) {
-                toManyPaths.add(resolvedPrefix.toString());
-            }
+            appendPrefix(resolvedPrefix, segment);
+            recordTopology(
+                    resolvedPrefix.toString(),
+                    resolved,
+                    resolvedType,
+                    collectionValued,
+                    joinedPaths,
+                    toManyPaths);
             if (collectionValued && index < segments.length - 1) {
-                Class<?> elementType = collectionElementType(resolvedType, resolved.genericType());
-                if (elementType == null) {
-                    throw unresolved(entity, selector, path);
-                }
+                Class<?> elementType = collectionElementTypeOrThrow(resolved, entity, selector, path);
                 traversesCollection = true;
                 current = elementType;
-                continue;
+            } else {
+                current = resolvedType;
             }
-            current = resolvedType;
         }
         return new ResolvedPath(
                 current,
@@ -173,6 +145,79 @@ public final class SearchPath {
                 segments.length,
                 Collections.unmodifiableSet(joinedPaths),
                 Collections.unmodifiableSet(toManyPaths));
+    }
+
+    private static void validateDepth(String selector, String path, SearchPolicy.Paths limits, int depth) {
+        if (depth > limits.maxDepth()) {
+            throw new SearchDefinitionValidationException(
+                    SearchDefinitionValidationException.PATH_LIMIT_EXCEEDED,
+                    "selector '%s' path '%s' exceeds maximum path depth of %d"
+                            .formatted(selector, path, limits.maxDepth()));
+        }
+    }
+
+    private static ResolvedSegment resolveRequiredSegment(
+            Class<?> current,
+            String segment,
+            Class<?> entity,
+            String selector,
+            String path) {
+        if (segment.isBlank()) {
+            throw unresolved(entity, selector, path);
+        }
+        ResolvedSegment resolved = resolveSegment(current, segment);
+        if (resolved == null) {
+            throw unresolved(entity, selector, path);
+        }
+        return resolved;
+    }
+
+    private static void appendPrefix(StringBuilder resolvedPrefix, String segment) {
+        if (!resolvedPrefix.isEmpty()) {
+            resolvedPrefix.append('.');
+        }
+        resolvedPrefix.append(segment);
+    }
+
+    private static void recordTopology(
+            String resolvedPath,
+            ResolvedSegment resolved,
+            Class<?> resolvedType,
+            boolean collectionValued,
+            Set<String> joinedPaths,
+            Set<String> toManyPaths) {
+        boolean toMany = isToMany(resolved, collectionValued);
+        if (isAssociation(resolved, resolvedType, toMany)) {
+            joinedPaths.add(resolvedPath);
+        }
+        if (toMany) {
+            toManyPaths.add(resolvedPath);
+        }
+    }
+
+    private static boolean isToMany(ResolvedSegment resolved, boolean collectionValued) {
+        return collectionValued || resolved.hasAnyAnnotation(
+                OneToMany.class,
+                ManyToMany.class,
+                ElementCollection.class);
+    }
+
+    private static boolean isAssociation(ResolvedSegment resolved, Class<?> resolvedType, boolean toMany) {
+        return toMany
+                || resolved.hasAnyAnnotation(ManyToOne.class, OneToOne.class)
+                || resolvedType.isAnnotationPresent(Entity.class);
+    }
+
+    private static Class<?> collectionElementTypeOrThrow(
+            ResolvedSegment resolved,
+            Class<?> entity,
+            String selector,
+            String path) {
+        Class<?> elementType = collectionElementType(resolved.type(), resolved.genericType());
+        if (elementType == null) {
+            throw unresolved(entity, selector, path);
+        }
+        return elementType;
     }
 
     private static ResolvedSegment resolveSegment(Class<?> owner, String segment) {

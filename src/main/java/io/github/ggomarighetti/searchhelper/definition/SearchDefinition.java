@@ -22,6 +22,8 @@ import org.springframework.util.Assert;
  * @param <T> entity type compiled by this definition
  */
 public final class SearchDefinition<T> {
+    private static final String CUSTOMIZER_MUST_NOT_BE_NULL = "customizer must not be null";
+
     private final Class<T> entity;
     private final Map<String, SearchField<?>> fields;
     private final SearchPaging paging;
@@ -236,7 +238,7 @@ public final class SearchDefinition<T> {
          * @return this builder
          */
         public Builder<T> fields(Consumer<Fields<T>> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(fields);
             return this;
         }
@@ -257,7 +259,7 @@ public final class SearchDefinition<T> {
          * @return this builder
          */
         public Builder<T> paging(Consumer<SearchPaging.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             if (paging != null) {
                 throw new IllegalArgumentException("paging is already declared");
             }
@@ -273,7 +275,7 @@ public final class SearchDefinition<T> {
          * @return this builder
          */
         public Builder<T> query(Consumer<SearchQuery.Builder<T>> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             ensureQueryIsNotDeclared();
             SearchQuery.Builder<T> builder = SearchQuery.builder();
             customizer.accept(builder);
@@ -300,7 +302,7 @@ public final class SearchDefinition<T> {
          * @return this builder
          */
         public Builder<T> limits(Consumer<SearchPolicy.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             ensureLimitsAreNotDeclared();
             limitsCustomizer = customizer;
             return this;
@@ -406,7 +408,7 @@ public final class SearchDefinition<T> {
          */
         public <V> Fields<T> add(
                 String selector, Class<V> type, Consumer<SearchField.Builder<V>> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(add(selector, type));
             return this;
         }

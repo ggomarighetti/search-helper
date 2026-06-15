@@ -419,6 +419,15 @@ class RsqlSearchGuardTest {
     }
 
     @Test
+    void ignoresParenthesesInsideQuotedArgumentsBeforeParsing() {
+        Specification<TestTypes.Product> specification = guard.specification(
+                "email=='person(((example@example.com'",
+                filters(limits -> limits.rsql(rsql -> rsql.maxParenthesesDepth(1))));
+
+        assertNotNull(specification);
+    }
+
+    @Test
     void rejectsRsqlAstNodeComparisonDepthAndLogicalChildLimits() {
         String filter = "taxId==20123456789;email==person@example.com";
 

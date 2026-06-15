@@ -1,5 +1,6 @@
 package io.github.ggomarighetti.searchhelper.validation;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -17,7 +18,9 @@ public record RuleViolation(
         String path,
         String message,
         String messageTemplate,
-        String constraint) {
+        String constraint) implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /** Validates all safe violation fields. */
     public RuleViolation {
         path = Objects.requireNonNull(path, "path must not be null");

@@ -21,6 +21,8 @@ import org.springframework.core.convert.ConversionService;
  * @param <T> exposed field type
  */
 public final class SearchFiltering<T> {
+    private static final String OPERATOR_MUST_NOT_BE_NULL = "operator must not be null";
+
     private static final SearchFiltering<?> DISABLED =
             new SearchFiltering<>(false, null, Object.class, false, SearchPath.Topology.none(), Map.of());
 
@@ -129,7 +131,7 @@ public final class SearchFiltering<T> {
      * @return {@code true} when allowed
      */
     public boolean allows(RsqlOperator operator) {
-        Objects.requireNonNull(operator, "operator must not be null");
+        Objects.requireNonNull(operator, OPERATOR_MUST_NOT_BE_NULL);
         return operators.containsKey(operator);
     }
 
@@ -142,7 +144,7 @@ public final class SearchFiltering<T> {
      * @return {@code true} when the operator is allowed and arguments are valid
      */
     public boolean accepts(RsqlOperator operator, List<String> arguments, ConversionService conversionService) {
-        Objects.requireNonNull(operator, "operator must not be null");
+        Objects.requireNonNull(operator, OPERATOR_MUST_NOT_BE_NULL);
         Objects.requireNonNull(arguments, "arguments must not be null");
         Objects.requireNonNull(conversionService, "conversionService must not be null");
         if (!operators.containsKey(operator)) {
@@ -241,7 +243,7 @@ public final class SearchFiltering<T> {
          */
         public Builder<T> allow(
                 RsqlOperator operator, Consumer<FilterOperator.Builder<T>> customizer) {
-            Objects.requireNonNull(operator, "operator must not be null");
+            Objects.requireNonNull(operator, OPERATOR_MUST_NOT_BE_NULL);
             Objects.requireNonNull(customizer, "customizer must not be null");
 
             FilterOperator.Builder<T> builder = FilterOperator.builder(operator);
@@ -266,7 +268,7 @@ public final class SearchFiltering<T> {
                 RsqlOperator operator,
                 Class<A> argumentType,
                 Consumer<FilterOperator.Builder<A>> customizer) {
-            Objects.requireNonNull(operator, "operator must not be null");
+            Objects.requireNonNull(operator, OPERATOR_MUST_NOT_BE_NULL);
             Objects.requireNonNull(argumentType, "argumentType must not be null");
             Objects.requireNonNull(customizer, "customizer must not be null");
 

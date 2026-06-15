@@ -1,5 +1,6 @@
 package io.github.ggomarighetti.searchhelper.exception;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -24,7 +25,9 @@ public record RsqlValidationError(
         String validationPath,
         String message,
         String messageTemplate,
-        String constraint) {
+        String constraint) implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public static final String FIELD_NOT_ALLOWED = "RSQL_FIELD_NOT_ALLOWED";
     public static final String FILTERING_DISABLED = "RSQL_FILTERING_DISABLED";
     public static final String OPERATOR_NOT_ALLOWED = "RSQL_OPERATOR_NOT_ALLOWED";

@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 final class SearchPageableGuard {
+    private static final String DEFINITION_MUST_NOT_BE_NULL = "definition must not be null";
+
     private final SearchPolicy policy;
 
     public SearchPageableGuard() {
@@ -28,7 +30,7 @@ final class SearchPageableGuard {
 
     public Pageable pageable(Pageable pageable, SearchDefinition<?> definition) {
         Objects.requireNonNull(pageable, "pageable must not be null");
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         SearchPolicy effectivePolicy = effectivePolicy(definition);
         return pageable(
                 pageable,
@@ -41,7 +43,7 @@ final class SearchPageableGuard {
             SearchDefinition<?> definition,
             SearchProtectionContext protection) {
         Objects.requireNonNull(pageable, "pageable must not be null");
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         Objects.requireNonNull(protection, "protection must not be null");
         SearchPolicy effectivePolicy = protection.policy();
 
@@ -80,7 +82,7 @@ final class SearchPageableGuard {
 
     public Sort sort(Sort sort, SearchDefinition<?> definition) {
         Objects.requireNonNull(sort, "sort must not be null");
-        Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, DEFINITION_MUST_NOT_BE_NULL);
         SearchProtectionContext protection =
                 new SearchProtectionContext(effectivePolicy(definition), SearchCompilationMode.PAGE);
         Sort validated = sort(sort, definition, protection.policy(), protection);
