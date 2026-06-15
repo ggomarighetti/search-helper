@@ -159,6 +159,7 @@ public final class SearchPaging {
 
         /** Creates an empty rule declaration. */
         public Rules() {
+            // Intentionally empty: callers add optional constraints through rule(...).
         }
 
         /**

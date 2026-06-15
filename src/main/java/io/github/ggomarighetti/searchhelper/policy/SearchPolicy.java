@@ -8,6 +8,8 @@ import java.util.function.UnaryOperator;
 
 /** Immutable global limits and cross-component search protection rules. */
 public final class SearchPolicy {
+    private static final String CUSTOMIZER_MUST_NOT_BE_NULL = "customizer must not be null";
+
     private static final SearchPolicy DEFAULTS = SearchPolicy.builder().build();
 
     private final Rsql rsql;
@@ -199,7 +201,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder rsql(Consumer<Rsql.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(rsql);
             return this;
         }
@@ -211,7 +213,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder filter(Consumer<Filter.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(filter);
             return this;
         }
@@ -223,7 +225,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder paging(Consumer<Paging.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(paging);
             return this;
         }
@@ -235,7 +237,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder sorting(Consumer<Sorting.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(sorting);
             return this;
         }
@@ -247,7 +249,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder query(Consumer<Query.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(query);
             return this;
         }
@@ -259,7 +261,7 @@ public final class SearchPolicy {
          * @return this builder
          */
         public Builder paths(Consumer<Paths.Builder> customizer) {
-            Objects.requireNonNull(customizer, "customizer must not be null");
+            Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
             customizer.accept(paths);
             return this;
         }
@@ -734,7 +736,7 @@ public final class SearchPolicy {
              * @return this builder
              */
             public Builder like(Consumer<Like.Builder> customizer) {
-                Objects.requireNonNull(customizer, "customizer must not be null");
+                Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
                 customizer.accept(like);
                 return this;
             }
@@ -1120,7 +1122,7 @@ public final class SearchPolicy {
              * @return this builder
              */
             public Builder page(Consumer<Page.Builder> customizer) {
-                Objects.requireNonNull(customizer, "customizer must not be null");
+                Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
                 customizer.accept(page);
                 return this;
             }
@@ -1132,7 +1134,7 @@ public final class SearchPolicy {
              * @return this builder
              */
             public Builder slice(Consumer<Slice.Builder> customizer) {
-                Objects.requireNonNull(customizer, "customizer must not be null");
+                Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
                 customizer.accept(slice);
                 return this;
             }

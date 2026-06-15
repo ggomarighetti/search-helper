@@ -43,6 +43,7 @@ public final class PostgresQueryRecorder implements QueryExecutionListener {
 
     @Override
     public void beforeQuery(ExecutionInfo executionInfo, List<QueryInfo> queryInfoList) {
+        // Intentionally empty: queries are recorded only after successful execution.
     }
 
     @Override
