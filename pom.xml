@@ -15,7 +15,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
-    <spring.boot.version>4.0.6</spring.boot.version>
+    <spring.boot.version>4.1.0</spring.boot.version>
     <perplexhub.rsql.version>7.0.2</perplexhub.rsql.version>
     <datasource-proxy.version>1.11.0</datasource-proxy.version>
     <expressly.version>6.0.0</expressly.version>
@@ -152,7 +152,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
