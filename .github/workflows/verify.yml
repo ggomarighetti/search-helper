@@ -33,12 +33,4 @@ jobs:
       - name: Verify
         run: ./mvnw -nsu verify
 
-      - name: Upload A-03 query plans
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: a03-postgres-plans-java-${{ matrix.java }}
-          path: target/a03-plans/**
-          if-no-files-found: warn
-          retention-days: 14
 
