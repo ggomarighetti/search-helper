@@ -1,5 +1,6 @@
 package io.github.ggomarighetti.searchhelper.autoconfigure;
 
+import io.github.ggomarighetti.searchhelper.compile.RsqlSearchGuardTestAccess;
 import io.github.ggomarighetti.searchhelper.compile.SearchCompiler;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
@@ -45,8 +46,7 @@ class SearchRsqlAutoConfigurationTest {
         contextRunner.run(context -> {
             assertNotNull(context.getBean(SearchCompiler.class));
             assertTrue(context.getBeansOfType(Object.class).values().stream()
-                    .noneMatch(bean -> bean.getClass().getName()
-                            .equals("io.github.ggomarighetti.searchhelper.compile.RsqlSearchGuard")));
+                    .noneMatch(RsqlSearchGuardTestAccess::isRsqlSearchGuard));
         });
     }
 
