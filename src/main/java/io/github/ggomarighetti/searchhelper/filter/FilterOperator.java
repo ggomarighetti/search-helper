@@ -172,6 +172,7 @@ public final class FilterOperator<T> {
 
         /** Creates an empty rule declaration. */
         public Rules() {
+            // Intentionally empty: callers add optional constraints through rule(...).
         }
 
         /**
