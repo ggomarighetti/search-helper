@@ -182,7 +182,7 @@ class DefaultFilterOperatorsTest {
     void returnedProfilesAreImmutable() {
         Set<RsqlOperator> operators = DefaultFilterOperators.forType(String.class);
 
-        assertThrows(UnsupportedOperationException.class, () -> operators.clear());
+        assertThrows(UnsupportedOperationException.class, operators::clear);
     }
 
     private static void assertContains(Class<?> type, RsqlOperator... expected) {
