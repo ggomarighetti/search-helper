@@ -85,7 +85,8 @@ class SearchQueryGuardTest {
         assertEquals(
                 "{jakarta.validation.constraints.Pattern.message}",
                 patternException.violations().get(0).messageTemplate());
-        assertThrows(UnsupportedOperationException.class, () -> sizeException.violations().clear());
+        var violations = sizeException.violations();
+        assertThrows(UnsupportedOperationException.class, violations::clear);
     }
 
     @Test
