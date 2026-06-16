@@ -3,6 +3,7 @@ package io.github.ggomarighetti.searchhelper.compile;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.exception.SearchQueryValidationException;
+import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.validator.cfg.defs.PatternDef;
@@ -10,6 +11,7 @@ import org.hibernate.validator.cfg.defs.SizeDef;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.data.jpa.domain.Specification.unrestricted;
 
@@ -28,6 +30,23 @@ class SearchQueryGuardTest {
         SearchQueryValidationException exception = assertThrows(
                 SearchQueryValidationException.class,
                 () -> guard.specification("tablets", definition));
+
+        assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
+    }
+
+    @Test
+    void rejectsQueryWhenPolicyDisablesQuerying() {
+        SearchQueryGuard disabledGuard = new SearchQueryGuard(SearchPolicy.builder()
+                .query(query -> query.enabled(false))
+                .build());
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("name", String.class))
+                .query(query -> query.specification(term -> unrestricted()))
+                .build();
+
+        SearchQueryValidationException exception = assertThrows(
+                SearchQueryValidationException.class,
+                () -> disabledGuard.specification("tablet", definition));
 
         assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
     }
@@ -135,6 +154,26 @@ class SearchQueryGuardTest {
                 () -> specification.toPredicate(null, null, null));
 
         assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
+    }
+
+    @Test
+    void preservesDeferredQueryValidationFailures() {
+        SearchQueryValidationException expected = new SearchQueryValidationException(
+                SearchQueryValidationException.QUERY_RULES_FORBIDDEN,
+                "query rejected");
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("name", String.class))
+                .query(query -> query.specification(term -> (root, criteria, builder) -> {
+                    throw expected;
+                }))
+                .build();
+
+        var specification = guard.specification("tablet", definition);
+        SearchQueryValidationException actual = assertThrows(
+                SearchQueryValidationException.class,
+                () -> specification.toPredicate(null, null, null));
+
+        assertSame(expected, actual);
     }
 
     @Test

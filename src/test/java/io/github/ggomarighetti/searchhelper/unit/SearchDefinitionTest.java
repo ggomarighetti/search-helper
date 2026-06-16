@@ -224,6 +224,87 @@ class SearchDefinitionTest {
     }
 
     @Test
+    void fallsBackToGlobalPolicyWhenNoDefinitionLimitsAreDeclared() {
+        SearchPolicy global = SearchPolicy.builder()
+                .paging(paging -> paging.maxSize(17))
+                .build();
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class))
+                .build();
+
+        assertSame(global, definition.effectiveLimits(global));
+        assertTrue(definition.limits().isEmpty());
+        assertTrue(SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .limits(global)
+                .fields(fields -> fields.add("email", String.class))
+                .build()
+                .limits()
+                .isPresent());
+    }
+
+    @Test
+    void rejectsDuplicatePagingAndLimitsDeclarations() {
+        var pagingBuilder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .paging();
+        var explicitLimitsBuilder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .limits(SearchPolicy.defaults());
+        var customLimitsBuilder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .limits(limits -> limits.paging(paging -> paging.maxSize(10)));
+
+        assertThrows(IllegalArgumentException.class, pagingBuilder::paging);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> explicitLimitsBuilder.limits(limits -> limits.paging(paging -> paging.maxSize(10))));
+        assertThrows(IllegalArgumentException.class, () -> customLimitsBuilder.limits(SearchPolicy.defaults()));
+    }
+
+    @Test
+    void rejectsDuplicateFilteringAndSortingDeclarations() {
+        assertThrows(IllegalArgumentException.class, () ->
+                SearchDefinition.builder()
+                        .entity(TestTypes.Product.class)
+                        .fields(fields -> fields.add("email", String.class)
+                                .filterable()
+                                .filterable()));
+        assertThrows(IllegalArgumentException.class, () ->
+                SearchDefinition.builder()
+                        .entity(TestTypes.Product.class)
+                        .fields(fields -> fields.add("email", String.class)
+                                .sortable()
+                                .sortable()));
+    }
+
+    @Test
+    void fieldsCustomizerOverloadReturnsTheSameDslAfterApplyingCustomizer() {
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class, SearchField.Builder::filterable)
+                        .add("price", BigDecimal.class))
+                .build();
+
+        assertTrue(definition.field("email").orElseThrow().filtering().enabled());
+        assertEquals(BigDecimal.class, definition.field("price").orElseThrow().type());
+    }
+
+    @Test
+    void rejectsDuplicateSelectors() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                SearchDefinition.builder()
+                        .entity(TestTypes.Product.class)
+                        .fields(fields -> {
+                            fields.add("email", String.class);
+                            fields.add("email", String.class);
+                        }));
+
+        assertEquals("selector 'email' is already declared", exception.getMessage());
+    }
+
+    @Test
     void leavesFieldWithoutSortingAsNotSortable() {
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("email", String.class))
@@ -557,6 +638,18 @@ class SearchDefinitionTest {
         var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("reviewRating", Integer.class)
                         .path("reviews.rating")
+                        .sortable());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+
+        assertTrue(exception.getMessage().contains("must not traverse collection-valued paths"));
+    }
+
+    @Test
+    void rejectsSortingOnTerminalCollectionValuedPath() {
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("tags", java.util.List.class)
+                        .path("tags")
                         .sortable());
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);

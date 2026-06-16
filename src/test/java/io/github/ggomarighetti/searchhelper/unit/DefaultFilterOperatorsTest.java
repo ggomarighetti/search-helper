@@ -31,6 +31,7 @@ class DefaultFilterOperatorsTest {
         assertContains(String.class, EQUAL, NOT_EQUAL, IN, LIKE, IGNORE_CASE_LIKE);
         assertContains(BigDecimal.class, EQUAL, IN, GREATER_THAN_OR_EQUAL, BETWEEN);
         assertContains(int.class, EQUAL, IN, GREATER_THAN_OR_EQUAL, BETWEEN);
+        assertContains(char.class, EQUAL, NOT_EQUAL, IN);
         assertContains(LocalDate.class, EQUAL, IN, GREATER_THAN_OR_EQUAL, BETWEEN);
         assertContains(DataSize.class, EQUAL, IN, GREATER_THAN_OR_EQUAL, BETWEEN);
         assertEquals(Set.of(EQUAL, NOT_EQUAL), DefaultFilterOperators.forType(Boolean.class));
@@ -186,6 +187,12 @@ class DefaultFilterOperatorsTest {
         Set<RsqlOperator> operators = DefaultFilterOperators.forType(String.class);
 
         assertThrows(UnsupportedOperationException.class, operators::clear);
+    }
+
+    @Test
+    void reportsWhetherDefaultProfilesExist() {
+        assertTrue(DefaultFilterOperators.supports(String.class));
+        assertFalse(DefaultFilterOperators.supports(TestTypes.Owner.class));
     }
 
     private static void assertContains(Class<?> type, RsqlOperator... expected) {
