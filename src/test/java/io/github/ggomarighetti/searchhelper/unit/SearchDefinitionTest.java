@@ -7,6 +7,7 @@ import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.query.SearchQuery;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators;
+import io.github.ggomarighetti.searchhelper.sort.SearchSorting;
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -568,7 +569,7 @@ class SearchDefinitionTest {
                 SearchDefinition.builder().entity(TestTypes.Product.class)
                         .fields(fields -> fields.add("amount", BigDecimal.class)
                                 .path("price")
-                                .sortable(sort -> sort.allowIgnoreCase()))
+                                .sortable(SearchSorting.Builder::allowIgnoreCase))
                         .build());
 
         assertTrue(exception.getMessage().contains("ignoreCase sorting requires a CharSequence path"));
