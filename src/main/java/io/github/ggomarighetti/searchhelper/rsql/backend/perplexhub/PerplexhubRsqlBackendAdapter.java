@@ -175,7 +175,7 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
                 ComparisonNode comparison,
                 RSQLJPAPredicateConverter converter,
                 From<?, ?> root) {
-            return (Predicate) comparison.accept(converter, (From) root);
+            return (Predicate) comparison.accept(converter, root);
         }
     }
 }
