@@ -38,6 +38,13 @@ class SearchCompilerTest {
     private final SearchCompiler compiler = new SearchCompiler();
 
     @Test
+    void constructsWithExplicitPolicy() {
+        SearchCompiler customCompiler = new SearchCompiler(SearchPolicy.defaults());
+
+        assertNotNull(customCompiler);
+    }
+
+    @Test
     void combinesRsqlFilterAndQuerySpecification() {
         AtomicReference<String> capturedQuery = new AtomicReference<>();
         SearchDefinition<TestTypes.Product> definition = definition(capturedQuery);

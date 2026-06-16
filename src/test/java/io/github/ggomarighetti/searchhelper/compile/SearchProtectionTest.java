@@ -6,17 +6,23 @@ import io.github.ggomarighetti.searchhelper.exception.SearchQueryValidationExcep
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.operator.DefaultRsqlOperatorDescriptors;
+import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.BETWEEN;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IGNORE_CASE_LIKE;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IN;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.LIKE;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_EQUAL;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_IN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -133,6 +139,254 @@ class SearchProtectionTest {
     }
 
     @Test
+    void rejectsOperatorSpecificComparisonLimits() {
+        SearchDefinition<TestTypes.Product> definition = comparisonDefinition(SearchPolicy.defaults());
+
+        SearchProtectionException notIn = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(
+                        SearchPolicy.builder().filter(filter -> filter.maxNotInValues(1)).build(),
+                        SearchCompilationMode.PAGE)
+                        .recordComparison(
+                                definition.field("amount").orElseThrow(),
+                                descriptor(NOT_IN),
+                                2,
+                                List.of("10", "20")));
+        SearchProtectionException between = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(
+                        SearchPolicy.builder().filter(filter -> filter.maxBetweenRanges(0)).build(),
+                        SearchCompilationMode.PAGE)
+                        .recordComparison(
+                                definition.field("amount").orElseThrow(),
+                                descriptor(BETWEEN),
+                                2,
+                                List.of("10", "20")));
+        SearchProtectionException negated = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(
+                        SearchPolicy.builder().filter(filter -> filter.maxNegatedComparisons(0)).build(),
+                        SearchCompilationMode.PAGE)
+                        .recordComparison(
+                                definition.field("amount").orElseThrow(),
+                                descriptor(NOT_EQUAL),
+                                1,
+                                List.of("10")));
+
+        assertRule(notIn, "filter.max-not-in-values", 2, 1);
+        assertRule(between, "filter.max-between-ranges", 1, 0);
+        assertRule(negated, "filter.max-negated-comparisons", 1, 0);
+    }
+
+    @Test
+    void rejectsLikePolicyViolations() {
+        SearchDefinition<TestTypes.Product> definition = comparisonDefinition(SearchPolicy.defaults());
+        var nameField = definition.field("name").orElseThrow();
+
+        SearchProtectionException ignoreCase = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like.allowIgnoreCase(false)))
+                        .build())
+                        .recordComparison(nameField, descriptor(IGNORE_CASE_LIKE), 1, List.of("abc")));
+        SearchProtectionException length = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like.maxPatternLength(2)))
+                        .build())
+                        .recordComparison(nameField, descriptor(LIKE), 1, List.of("abc")));
+        SearchProtectionException wildcards = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like.maxWildcards(0)))
+                        .build())
+                        .recordComparison(nameField, descriptor(LIKE), 1, List.of("a*b")));
+        SearchProtectionException leading = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like.allowLeadingWildcard(false)))
+                        .build())
+                        .recordComparison(nameField, descriptor(LIKE), 1, List.of("*abc")));
+        SearchProtectionException contains = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like
+                                .allowLeadingWildcard(true)
+                                .allowTrailingWildcard(true)
+                                .allowContains(false)
+                                .maxWildcards(2)))
+                        .build())
+                        .recordComparison(nameField, descriptor(LIKE), 1, List.of("*abc*")));
+        SearchProtectionException literal = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.like(like -> like.minLiteralLength(3)))
+                        .build())
+                        .recordComparison(nameField, descriptor(LIKE), 1, List.of("a*")));
+
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("")));
+        assertRule(ignoreCase, "filter.like.allow-ignore-case", 1, 0);
+        assertRule(length, "filter.like.max-pattern-length", 3, 2);
+        assertRule(wildcards, "filter.like.max-wildcards", 1, 0);
+        assertRule(leading, "filter.like.allow-leading-wildcard", 1, 0);
+        assertRule(contains, "filter.like.allow-contains", 1, 0);
+        assertRule(literal, "filter.like.min-literal-length", 1, 3);
+    }
+
+    @Test
+    void recordsRequestStateAndRejectsCrossComponentLimits() {
+        SearchPolicy policy = SearchPolicy.builder()
+                .filter(filter -> filter.requireDistinctForToMany(true))
+                .build();
+        SearchDefinition<TestTypes.Product> definition = comparisonDefinition(policy);
+        SearchProtectionContext protection = new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+
+        assertEquals(policy, protection.policy());
+        assertEquals(SearchCompilationMode.PAGE, protection.mode());
+        protection.recordComparison(
+                definition.field("reviewRating").orElseThrow(),
+                descriptor(EQUAL),
+                1,
+                List.of("5"));
+
+        assertEquals(1, protection.joinedPaths());
+        assertEquals(1, protection.toManyPaths());
+        assertEquals(false, protection.distinct());
+
+        SearchProtectionException exception = assertThrows(SearchProtectionException.class, protection::completeFilter);
+
+        assertRule(exception, "filter.require-distinct-for-to-many", 0, 1);
+        protection.recordDistinct();
+        assertEquals(true, protection.distinct());
+        assertDoesNotThrow(protection::completeFilter);
+    }
+
+    @Test
+    void rejectsOrPageSliceSortAndQueryCombinations() {
+        SearchProtectionException heterogeneousOr = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .filter(filter -> filter.maxHeterogeneousOrBranches(1))
+                        .build())
+                        .recordOr(2, 2, 0));
+        SearchProtectionException sliceDisabled = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(SearchPolicy.builder()
+                        .paging(paging -> paging.slice(slice -> slice.enabled(false)))
+                        .build(), SearchCompilationMode.SLICE)
+                        .recordPaging(PageRequest.of(0, 10)));
+        SearchProtectionException sliceSize = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(SearchPolicy.builder()
+                        .paging(paging -> paging.slice(slice -> slice.maxSize(5)))
+                        .build(), SearchCompilationMode.SLICE)
+                        .recordPaging(PageRequest.of(0, 10)));
+        SearchProtectionException distinctCount = assertThrows(
+                SearchProtectionException.class,
+                () -> {
+                    SearchProtectionContext protection = context(SearchPolicy.builder()
+                            .paging(paging -> paging.page(page -> page.allowDistinctCount(false)))
+                            .build());
+                    protection.recordPaging(PageRequest.of(0, 10));
+                    protection.recordDistinct();
+                    protection.completeRequest();
+                });
+
+        assertRule(heterogeneousOr, "filter.max-heterogeneous-or-branches", 2, 1);
+        assertRule(sliceDisabled, "paging.slice.enabled", 1, 0);
+        assertRule(sliceSize, "paging.slice.max-size", 10, 5);
+        assertRule(distinctCount, "paging.page.allow-distinct-count", 1, 0);
+    }
+
+    @Test
+    void rejectsSortAndQueryInteractionLimits() {
+        SearchDefinition<TestTypes.Product> comparisonDefinition = comparisonDefinition(SearchPolicy.defaults());
+        SearchDefinition<Product> sortDefinition = SearchDefinition.builder()
+                .entity(Product.class)
+                .fields(fields -> fields.add("supplierName", String.class)
+                        .path("supplier.name")
+                        .sortable())
+                .build();
+        SearchProtectionException ignoreCase = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .sorting(sorting -> sorting.allowIgnoreCase(false))
+                        .build())
+                        .recordSort(
+                                comparisonDefinition.field("name").orElseThrow().sorting(),
+                                Sort.Order.asc("name").ignoreCase()));
+        SearchProtectionException nullHandling = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .sorting(sorting -> sorting.allowNullHandling(false))
+                        .build())
+                        .recordSort(
+                                comparisonDefinition.field("name").orElseThrow().sorting(),
+                                Sort.Order.asc("name").nullsLast()));
+        SearchProtectionException relationOrders = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder()
+                        .sorting(sorting -> sorting.maxRelationOrders(0))
+                        .build())
+                        .recordSort(
+                                sortDefinition.field("supplierName").orElseThrow().sorting(),
+                                Sort.Order.asc("supplierName")));
+        SearchProtectionException queryWithToMany = assertThrows(
+                SearchProtectionException.class,
+                () -> {
+                    SearchPolicy policy = SearchPolicy.builder()
+                            .query(query -> query.allowWithToManyFilter(false))
+                            .build();
+                    SearchProtectionContext protection = context(policy);
+                    protection.recordQuery("tablet");
+                    protection.recordComparison(
+                            comparisonDefinition(policy).field("reviewRating").orElseThrow(),
+                            descriptor(EQUAL),
+                            1,
+                            List.of("5"));
+                    protection.completeRequest();
+                });
+        SearchProtectionException queryWithRelationSort = assertThrows(
+                SearchProtectionException.class,
+                () -> {
+                    SearchProtectionContext protection = context(SearchPolicy.builder()
+                            .query(query -> query.allowWithRelationSort(false))
+                            .build());
+                    protection.recordQuery("tablet");
+                    protection.recordSort(
+                            sortDefinition.field("supplierName").orElseThrow().sorting(),
+                            Sort.Order.asc("supplierName"));
+                    protection.completeRequest();
+                });
+
+        assertRule(ignoreCase, "sorting.allow-ignore-case", 1, 0);
+        assertRule(nullHandling, "sorting.allow-null-handling", 1, 0);
+        assertRule(relationOrders, "sorting.max-relation-orders", 1, 0);
+        assertRule(queryWithToMany, "query.allow-with-to-many-filter", 1, 0);
+        assertRule(queryWithRelationSort, "query.allow-with-relation-sort", 1, 0);
+    }
+
+    @Test
+    void rejectsQueryLengthLimitsAndIgnoresAbsentQuery() {
+        SearchProtectionContext protection = context(SearchPolicy.defaults());
+
+        assertDoesNotThrow(() -> protection.recordQuery(null));
+
+        SearchProtectionException tooLong = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder().query(query -> query.maxLength(3)).build()).recordQuery("abcd"));
+        SearchProtectionException tooShort = assertThrows(
+                SearchProtectionException.class,
+                () -> context(SearchPolicy.builder().query(query -> query.minLength(3)).build()).recordQuery("ab"));
+
+        assertRule(tooLong, "query.max-length", 4, 3);
+        assertRule(tooShort, "query.min-length", 2, 3);
+    }
+
+    @Test
     void pageModeCanRejectToManyCountWhileSliceModeAcceptsSameShape() {
         SearchPolicy policy = SearchPolicy.builder()
                 .paging(paging -> paging.page(page -> page.allowToManyCount(false)))
@@ -246,6 +500,35 @@ class SearchProtectionTest {
                                 org.springframework.boot.convert.ApplicationConversionService.getSharedInstance())
                         .build(),
                 policy);
+    }
+
+    private static SearchProtectionContext context(SearchPolicy policy) {
+        return new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+    }
+
+    private static RsqlOperatorDescriptor descriptor(RsqlOperator operator) {
+        return DefaultRsqlOperatorDescriptors.all().stream()
+                .filter(candidate -> operator.equals(candidate.operator()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static SearchDefinition<TestTypes.Product> comparisonDefinition(SearchPolicy policy) {
+        return SearchDefinition.builder(policy)
+                .entity(TestTypes.Product.class)
+                .fields(fields -> {
+                    fields.add("amount", java.math.BigDecimal.class)
+                            .path("price")
+                            .filterable(filter -> filter.allow(EQUAL))
+                            .sortable();
+                    fields.add("name", String.class)
+                            .filterable(filter -> filter.allow(LIKE))
+                            .sortable();
+                    fields.add("reviewRating", Integer.class)
+                            .path("reviews.rating")
+                            .filterable(filter -> filter.allow(EQUAL));
+                })
+                .build();
     }
 
     private static void assertRule(
