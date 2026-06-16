@@ -24,9 +24,10 @@ class SearchQueryGuardTest {
 
     @Test
     void rejectsQueryWhenDefinitionDoesNotDeclareQuery() {
+        SearchDefinition<TestTypes.Product> definition = definitionWithoutQuery();
         SearchQueryValidationException exception = assertThrows(
                 SearchQueryValidationException.class,
-                () -> guard.specification("tablets", definitionWithoutQuery()));
+                () -> guard.specification("tablets", definition));
 
         assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
     }
