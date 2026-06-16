@@ -494,12 +494,12 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsFilteringWithoutAllowedOperators() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("taxId", String.class)
-                                .path("person.taxIdentifier")
-                                .filterable(filter -> {}))
-                        .build());
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("taxId", String.class)
+                        .path("person.taxIdentifier")
+                        .filterable(filter -> {}));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertEquals("selector 'taxId' filtering must declare at least one allowed operator", exception.getMessage());
     }
