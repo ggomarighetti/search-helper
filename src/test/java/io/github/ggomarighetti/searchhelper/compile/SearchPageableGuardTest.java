@@ -224,9 +224,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsPageableSafetyLimitsBeforeHibernateRules() {
+        SearchDefinition<TestTypes.Product> definition = definition();
+        PageRequest invalidPage = PageRequest.of(101, 1);
         SearchPageableValidationException pageException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(101, 1), definition()));
+                () -> guard.pageable(invalidPage, definition));
         SearchPageableValidationException sizeException = assertThrows(
                 SearchPageableValidationException.class,
                 () -> guard.pageable(PageRequest.of(0, 101), definition()));
