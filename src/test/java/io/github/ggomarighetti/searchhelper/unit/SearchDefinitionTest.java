@@ -566,12 +566,12 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsIgnoreCaseSortingForNonTextPaths() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("amount", BigDecimal.class)
-                                .path("price")
-                                .sortable(SearchSorting.Builder::allowIgnoreCase))
-                        .build());
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("amount", BigDecimal.class)
+                        .path("price")
+                        .sortable(SearchSorting.Builder::allowIgnoreCase));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("ignoreCase sorting requires a CharSequence path"));
     }
