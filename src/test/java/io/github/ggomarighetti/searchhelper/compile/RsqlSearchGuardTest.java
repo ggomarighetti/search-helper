@@ -464,10 +464,11 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsRsqlOrBranchLimit() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .filter(filter -> filter.maxOrBranches(1)));
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification("taxId==20123456789,email==person@example.com", filters(limits -> limits
-                        .filter(filter -> filter.maxOrBranches(1)))));
+                () -> guard.specification("taxId==20123456789,email==person@example.com", definition));
 
         assertProtectionRule(exception, "filter.max-or-branches");
     }
