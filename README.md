@@ -441,6 +441,17 @@ Run the complete verification suite:
 
 PostgreSQL integration tests use Testcontainers, so Docker must be available.
 
+Generate JaCoCo coverage for unit and integration tests:
+
+```bash
+./mvnw -Pcoverage verify
+```
+
+The XML report is written to `target/site/jacoco/jacoco.xml`; the HTML report
+is written to `target/site/jacoco/index.html`. CI uploads the JaCoCo report and
+JUnit XML test results to Codecov, and runs SonarQube Cloud analysis when the
+repository has a `SONAR_TOKEN` secret configured.
+
 Verify public Javadocs and release checks:
 
 ```bash

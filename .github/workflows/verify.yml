@@ -26,10 +26,18 @@ jobs:
     name: Verify (Java 25)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
@@ -40,11 +48,52 @@ jobs:
 
       - name: Verify
         if: github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
-        run: ./mvnw $MAVEN_ARGS verify
+        run: ./mvnw $MAVEN_ARGS -Pcoverage verify
 
       - name: Verify release profile
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-        run: ./mvnw $MAVEN_ARGS -Prelease verify
+        run: ./mvnw $MAVEN_ARGS -Pcoverage,release verify
+
+      - name: Upload test and coverage artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-and-coverage-reports
+          path: |
+            target/site/jacoco/
+            target/surefire-reports/
+            target/failsafe-reports/
+          if-no-files-found: ignore
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: target/site/jacoco/jacoco.xml
+          disable_search: true
+          flags: java
+          name: java-coverage
+          fail_ci_if_error: true
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: target/surefire-reports/*.xml,target/failsafe-reports/*.xml
+          disable_search: true
+          report_type: test_results
+          flags: java
+          name: java-tests
+          fail_ci_if_error: true
+
+      - name: SonarQube Cloud analysis
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: ./mvnw $MAVEN_ARGS sonar:sonar
+
+      - name: Skip SonarQube Cloud analysis
+        if: ${{ env.SONAR_TOKEN == '' }}
+        run: echo "SONAR_TOKEN secret is not configured; skipping SonarQube Cloud analysis."
 
   compatibility:
     name: Compatibility (Java ${{ matrix.java }})
