@@ -128,10 +128,12 @@ class SearchCompilerTest {
     void rejectsNullApplicationSpecifications() {
         @SuppressWarnings("unchecked")
         Specification<TestTypes.Product>[] nullSpecifications = null;
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        SearchDefinition<TestTypes.Product> definition = emptyDefinition();
 
         NullPointerException arrayException = assertThrows(
                 NullPointerException.class,
-                () -> compiler.compile(null, null, PageRequest.of(0, 10), emptyDefinition(), nullSpecifications));
+                () -> compiler.compile(null, null, pageRequest, definition, nullSpecifications));
         NullPointerException elementException = assertThrows(
                 NullPointerException.class,
                 () -> compiler.compile(
