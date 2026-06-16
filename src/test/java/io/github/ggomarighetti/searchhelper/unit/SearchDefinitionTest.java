@@ -397,10 +397,11 @@ class SearchDefinitionTest {
         var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("email", String.class))
                 .query(definitionQuery -> definitionQuery.specification(term ->
-                        (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction()))
-                .query(query);
+                        (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction()));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> declareDuplicateQuery(builder, query));
 
         assertEquals("query is already declared", exception.getMessage());
     }
@@ -579,5 +580,11 @@ class SearchDefinitionTest {
         builder.fields(fields -> fields.add("expiresAt", java.time.Instant.class)
                 .subtype(String.class)
                 .filterable(filter -> filter.allow(EQUAL)));
+    }
+
+    private static void declareDuplicateQuery(
+            SearchDefinition.Builder<TestTypes.Product> builder,
+            SearchQuery<TestTypes.Product> query) {
+        builder.query(query);
     }
 }
