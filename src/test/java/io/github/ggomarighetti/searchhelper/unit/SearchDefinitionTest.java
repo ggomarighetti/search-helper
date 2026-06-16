@@ -480,12 +480,12 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsFieldTypeThatDoesNotMatchEntityPath() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("amount", String.class)
-                                .path("price")
-                                .filterable(filter -> filter.allow(EQUAL)))
-                        .build());
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("amount", String.class)
+                        .path("price")
+                        .filterable(filter -> filter.allow(EQUAL)));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertEquals(
                 "selector 'amount' path 'price' resolves to type 'java.math.BigDecimal' but was declared as 'java.lang.String'",
