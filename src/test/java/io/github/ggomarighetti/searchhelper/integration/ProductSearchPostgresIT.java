@@ -7,7 +7,6 @@ import io.github.ggomarighetti.searchhelper.exception.RsqlFilterValidationExcept
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchPageableValidationException;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductRepository;
-import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSeeder;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSeeder.Catalog;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSpecifications;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
