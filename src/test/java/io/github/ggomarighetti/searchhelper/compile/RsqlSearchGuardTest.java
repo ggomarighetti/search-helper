@@ -345,9 +345,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsInvalidArgumentWithTypedValidator() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId==123", filters()));
+                () -> guard.specification("taxId==123", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         RsqlValidationError error = exception.errors().get(0);
