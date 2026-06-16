@@ -5,7 +5,6 @@ import io.github.ggomarighetti.searchhelper.compile.CompiledSearch;
 import io.github.ggomarighetti.searchhelper.compile.SearchCompiler;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductRepository;
-import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSpecifications;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.postgres.PostgresExplain;
 import io.github.ggomarighetti.searchhelper.integration.postgres.PostgresPlan;
