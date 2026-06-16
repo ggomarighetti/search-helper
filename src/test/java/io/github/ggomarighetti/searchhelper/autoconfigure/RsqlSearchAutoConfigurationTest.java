@@ -69,9 +69,10 @@ class SearchRsqlAutoConfigurationTest {
             compiler.compile("sku==SKU123", null, PageRequest.of(0, 10), definition);
             assertEquals(new Sku("SKU123"), engine.conversionService().convert("SKU123", Sku.class));
 
+            PageRequest pageRequest = PageRequest.of(0, 10);
             RsqlFilterValidationException exception =
                     assertThrows(RsqlFilterValidationException.class, () ->
-                            compiler.compile("sku==BAD", null, PageRequest.of(0, 10), definition));
+                            compiler.compile("sku==BAD", null, pageRequest, definition));
 
             assertEquals(RsqlFilterValidationException.RULES_FORBIDDEN, exception.code());
         });
