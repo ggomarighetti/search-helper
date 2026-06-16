@@ -1,6 +1,5 @@
 package io.github.ggomarighetti.searchhelper.compile;
 
-import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
