@@ -71,12 +71,12 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsSubtypeOutsideEntityHierarchy() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("expiresAt", java.time.Instant.class)
-                                .subtype(String.class)
-                                .filterable(filter -> filter.allow(EQUAL)))
-                        .build());
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("expiresAt", java.time.Instant.class)
+                        .subtype(String.class)
+                        .filterable(filter -> filter.allow(EQUAL)));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("must extend entity"));
     }
