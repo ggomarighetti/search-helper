@@ -2,7 +2,6 @@ package io.github.ggomarighetti.searchhelper.compile;
 
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchPageableValidationException;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.math.BigDecimal;
