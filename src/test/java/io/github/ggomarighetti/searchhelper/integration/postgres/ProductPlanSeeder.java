@@ -1,6 +1,5 @@
 package io.github.ggomarighetti.searchhelper.integration.postgres;
 
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Review;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Supplier;
 import java.math.BigDecimal;
