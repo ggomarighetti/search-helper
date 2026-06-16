@@ -80,6 +80,14 @@ class SearchHelperPropertiesTest {
 
         SearchPolicy policy = properties.toPolicy();
 
+        assertRsqlProperties(properties, policy);
+        assertFilterProperties(properties, policy);
+        assertPagingProperties(properties, policy);
+        assertSortingProperties(properties, policy);
+        assertQueryAndPathProperties(properties, policy);
+    }
+
+    private static void assertRsqlProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertFalse(properties.getRsql().isEnabled());
         assertFalse(properties.getRsql().getPerplexhub().isStrictEquality());
         assertEquals('!', properties.getRsql().getPerplexhub().getLikeEscapeCharacter());
@@ -93,7 +101,9 @@ class SearchHelperPropertiesTest {
         assertEquals(20, policy.rsql().maxNodes());
         assertEquals(5, policy.rsql().maxDepth());
         assertEquals(6, policy.rsql().maxLogicalChildren());
+    }
 
+    private static void assertFilterProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertEquals(7, properties.getFilter().getMaxComparisons());
         assertEquals(3, properties.getFilter().getMaxComparisonsPerSelector());
         assertEquals(4, properties.getFilter().getMaxArgumentsPerComparison());
@@ -129,6 +139,10 @@ class SearchHelperPropertiesTest {
         assertFalse(policy.filter().allowToManyFiltering());
         assertFalse(policy.filter().requireDistinctForToMany());
 
+        assertFilterLikeProperties(properties, policy);
+    }
+
+    private static void assertFilterLikeProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertEquals(40, properties.getFilter().getLike().getMaxPatternLength());
         assertEquals(2, properties.getFilter().getLike().getMinLiteralLength());
         assertTrue(properties.getFilter().getLike().isAllowLeadingWildcard());
@@ -143,7 +157,9 @@ class SearchHelperPropertiesTest {
         assertFalse(policy.filter().like().allowContains());
         assertEquals(2, policy.filter().like().maxWildcards());
         assertFalse(policy.filter().like().allowIgnoreCase());
+    }
 
+    private static void assertPagingProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertEquals(1, properties.getPaging().getMinPage());
         assertEquals(20, properties.getPaging().getMaxPage());
         assertEquals(2, properties.getPaging().getMinSize());
@@ -161,6 +177,10 @@ class SearchHelperPropertiesTest {
         assertEquals(25, policy.paging().defaultUnpagedSize());
         assertEquals(80, policy.paging().maxUnpagedSize());
 
+        assertPageAndSliceProperties(properties, policy);
+    }
+
+    private static void assertPageAndSliceProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertTrue(properties.getPaging().getPage().isAllowToManyCount());
         assertEquals(3, properties.getPaging().getPage().getMaxToManyPaths());
         assertFalse(properties.getPaging().getPage().isAllowDistinctCount());
@@ -176,7 +196,9 @@ class SearchHelperPropertiesTest {
         assertFalse(policy.paging().slice().enabled());
         assertFalse(policy.paging().slice().preferForToMany());
         assertEquals(30, policy.paging().slice().maxSize());
+    }
 
+    private static void assertSortingProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertEquals(4, properties.getSorting().getMaxOrders());
         assertFalse(properties.getSorting().isAllowRelationSorting());
         assertEquals(0, properties.getSorting().getMaxRelationOrders());
@@ -191,7 +213,9 @@ class SearchHelperPropertiesTest {
         assertTrue(policy.sorting().allowNullHandling());
         assertEquals(5, policy.sorting().maxJoinedPaths());
         assertFalse(policy.sorting().disallowToManySorting());
+    }
 
+    private static void assertQueryAndPathProperties(SearchHelperProperties properties, SearchPolicy policy) {
         assertFalse(properties.getQuery().isEnabled());
         assertEquals(2, properties.getQuery().getMinLength());
         assertEquals(60, properties.getQuery().getMaxLength());

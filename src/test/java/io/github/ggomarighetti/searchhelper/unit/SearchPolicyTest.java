@@ -3,7 +3,7 @@ package io.github.ggomarighetti.searchhelper.unit;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 
 class SearchPolicyTest {
     @Test
@@ -38,25 +38,25 @@ class SearchPolicyTest {
 
     @Test
     void rejectsInvalidNumericLimits() {
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Rsql.builder().maxLength(0).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Sorting.builder().maxRelationOrders(-1).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Paging.builder().maxOffset(-1).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Paging.builder().minPage(2).maxPage(1).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Paging.builder().minSize(20).maxSize(10).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Paging.builder().unpagedSize(20).maxUnpagedSize(10).build());
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPolicy.Query.builder().minLength(5).maxLength(4).build());
     }

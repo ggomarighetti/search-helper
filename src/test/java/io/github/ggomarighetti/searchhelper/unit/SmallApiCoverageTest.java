@@ -20,7 +20,7 @@ import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.E
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -53,9 +53,9 @@ class SmallApiCoverageTest {
         assertFalse(paging.acceptsSize(1));
         assertEquals(1, paging.pageViolations(0).size());
         assertEquals(1, paging.sizeViolations(1).size());
-        assertThrows(NullPointerException.class, () -> SearchPaging.builder().page(null));
-        assertThrows(NullPointerException.class, () -> SearchPaging.builder().size(null));
-        assertThrows(NullPointerException.class, () -> new SearchPaging.Rules<Integer>().rule(null));
+        thrownBy(NullPointerException.class, () -> SearchPaging.builder().page(null));
+        thrownBy(NullPointerException.class, () -> SearchPaging.builder().size(null));
+        thrownBy(NullPointerException.class, () -> new SearchPaging.Rules<Integer>().rule(null));
     }
 
     @Test
@@ -65,7 +65,7 @@ class SmallApiCoverageTest {
         assertFalse(query.accepts("needle"));
         assertFalse(query.hasRules());
         assertEquals(List.of(), query.violations("needle"));
-        assertThrows(IllegalStateException.class, () -> query.toSpecification("needle"));
+        thrownBy(IllegalStateException.class, () -> query.toSpecification("needle"));
     }
 
     @Test
@@ -73,10 +73,10 @@ class SmallApiCoverageTest {
         SearchQuery.Builder<TestTypes.Product> builder = SearchQuery.builder();
         builder.specification(term -> (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction());
 
-        assertThrows(IllegalArgumentException.class, () -> SearchQuery.builder().build());
-        assertThrows(NullPointerException.class, () -> SearchQuery.builder().rule(null));
-        assertThrows(NullPointerException.class, () -> SearchQuery.builder().specification(null));
-        assertThrows(IllegalArgumentException.class, () -> builder.specification(term ->
+        thrownBy(IllegalArgumentException.class, () -> SearchQuery.builder().build());
+        thrownBy(NullPointerException.class, () -> SearchQuery.builder().rule(null));
+        thrownBy(NullPointerException.class, () -> SearchQuery.builder().specification(null));
+        thrownBy(IllegalArgumentException.class, () -> builder.specification(term ->
                 (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction()));
     }
 
@@ -109,8 +109,8 @@ class SmallApiCoverageTest {
         assertFalse(disabled.accepts(ASC));
         assertFalse(disabled.acceptsIgnoreCase(false));
         assertFalse(disabled.acceptsNullHandling(Sort.NullHandling.NATIVE));
-        assertThrows(NullPointerException.class, () -> disabled.accepts(null));
-        assertThrows(NullPointerException.class, () -> disabled.acceptsNullHandling(null));
+        thrownBy(NullPointerException.class, () -> disabled.accepts(null));
+        thrownBy(NullPointerException.class, () -> disabled.acceptsNullHandling(null));
         assertTrue(sorting.accepts(ASC));
         assertFalse(sorting.accepts(DESC));
         assertTrue(sorting.ignoreCase());
@@ -119,10 +119,10 @@ class SmallApiCoverageTest {
         assertTrue(sorting.acceptsIgnoreCase(false));
         assertTrue(sorting.acceptsNullHandling(Sort.NullHandling.NULLS_FIRST));
         assertFalse(sorting.acceptsNullHandling(Sort.NullHandling.NULLS_LAST));
-        assertThrows(IllegalArgumentException.class, () -> SearchSorting.builder().allow());
-        assertThrows(NullPointerException.class, () -> SearchSorting.builder().allow((org.springframework.data.domain.Sort.Direction) null));
-        assertThrows(IllegalArgumentException.class, () -> SearchSorting.builder().allowNullHandling());
-        assertThrows(NullPointerException.class, () -> SearchSorting.builder().allowNullHandling((Sort.NullHandling) null));
+        thrownBy(IllegalArgumentException.class, () -> SearchSorting.builder().allow());
+        thrownBy(NullPointerException.class, () -> SearchSorting.builder().allow((org.springframework.data.domain.Sort.Direction) null));
+        thrownBy(IllegalArgumentException.class, () -> SearchSorting.builder().allowNullHandling());
+        thrownBy(NullPointerException.class, () -> SearchSorting.builder().allowNullHandling((Sort.NullHandling) null));
     }
 
     @Test
@@ -138,12 +138,12 @@ class SmallApiCoverageTest {
         assertEquals(1, argument.optionalArgumentIndex().orElseThrow());
         assertEquals(violation, argument.optionalViolation().orElseThrow());
         assertTrue(arguments.optionalArgumentIndex().isEmpty());
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 new FilterValidationError(FilterValidationError.Code.ARGUMENT_RULE, -1, null, violation));
-        assertThrows(NullPointerException.class, () -> FilterValidationError.conversionFailed(0, null));
-        assertThrows(NullPointerException.class, () ->
+        thrownBy(NullPointerException.class, () -> FilterValidationError.conversionFailed(0, null));
+        thrownBy(NullPointerException.class, () ->
                 new FilterValidationError(FilterValidationError.Code.CONVERSION_FAILED, null, null, null));
-        assertThrows(NullPointerException.class, () ->
+        thrownBy(NullPointerException.class, () ->
                 new FilterValidationError(FilterValidationError.Code.ARGUMENTS_RULE, null, null, null));
     }
 
@@ -155,8 +155,8 @@ class SmallApiCoverageTest {
         assertEquals("field", blank.prefixed("field").path());
         assertEquals("field.name", nested.prefixed("field").path());
         assertEquals("other", nested.withPath("other").path());
-        assertThrows(NullPointerException.class, () -> nested.prefixed(null));
-        assertThrows(NullPointerException.class, () -> new RuleViolation(null, "message", "{message}", "Constraint"));
+        thrownBy(NullPointerException.class, () -> nested.prefixed(null));
+        thrownBy(NullPointerException.class, () -> new RuleViolation(null, "message", "{message}", "Constraint"));
     }
 
     @Test
@@ -173,11 +173,11 @@ class SmallApiCoverageTest {
                 null);
 
         assertEquals("email", error.selector());
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 new RsqlValidationError(" ", "$", null, null, null, null, "message", null, null));
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 new RsqlValidationError(RsqlValidationError.FIELD_NOT_ALLOWED, " ", null, null, null, null, "message", null, null));
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 new RsqlValidationError(RsqlValidationError.FIELD_NOT_ALLOWED, "$", null, null, -1, null, "message", null, null));
     }
 
@@ -194,8 +194,8 @@ class SmallApiCoverageTest {
         assertFalse(bounded.accepts(4));
         assertTrue(bounded.accepts(3));
         assertTrue(unbounded.accepts(100));
-        assertThrows(IllegalArgumentException.class, () -> RsqlOperatorArity.exact(-1));
-        assertThrows(IllegalArgumentException.class, () -> RsqlOperatorArity.between(2, 1));
+        thrownBy(IllegalArgumentException.class, () -> RsqlOperatorArity.exact(-1));
+        thrownBy(IllegalArgumentException.class, () -> RsqlOperatorArity.between(2, 1));
     }
 
     @Test
@@ -219,10 +219,10 @@ class SmallApiCoverageTest {
         assertEquals(descriptor, registry.require(custom));
         assertTrue(registry.descriptor(descriptor.comparisonOperator()).isPresent());
         assertTrue(registry.descriptor(other).isEmpty());
-        assertThrows(IllegalArgumentException.class, () -> registry.require(other));
-        assertThrows(IllegalArgumentException.class, () -> RsqlOperatorDescriptor.builder(custom).build());
-        assertThrows(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(descriptor, descriptor)));
-        assertThrows(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(
+        thrownBy(IllegalArgumentException.class, () -> registry.require(other));
+        thrownBy(IllegalArgumentException.class, () -> RsqlOperatorDescriptor.builder(custom).build());
+        thrownBy(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(descriptor, descriptor)));
+        thrownBy(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(
                 descriptor,
                 RsqlOperatorDescriptor.of(other, "=custom="))));
     }

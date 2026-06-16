@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SearchPathTest {
@@ -102,33 +102,33 @@ class SearchPathTest {
 
     @Test
     void rejectsCollectionPathsWhenElementTypeCannotResolveToAPropertyOwner() {
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "genericLines.sku", String.class, DEEP_PATHS));
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "nestedLines.sku", String.class, DEEP_PATHS));
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "arrayLines.sku", String.class, DEEP_PATHS));
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "lineArrays.sku", String.class, DEEP_PATHS));
     }
 
     @Test
     void rejectsBlankMissingAndTooDeepSegments() {
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(TestTypes.Product.class, "name", "customer..name", String.class, DEEP_PATHS));
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(TestTypes.Product.class, "missing", "missing", String.class, DEEP_PATHS));
-        assertThrows(
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(IndexedOnlyNoFieldRoot.class, "values", "values", String.class, DEEP_PATHS));
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> SearchPath.metadata(
                         TestTypes.Product.class,
@@ -167,7 +167,7 @@ class SearchPathTest {
 
         assertEquals(Set.of("buyer"), topology.joinedPaths());
         assertEquals(Set.of("orders"), topology.toManyPaths());
-        assertThrows(UnsupportedOperationException.class, () -> topology.joinedPaths().add("other"));
+        thrownBy(UnsupportedOperationException.class, () -> topology.joinedPaths().add("other"));
         assertEquals(new SearchPath.Topology(0, Set.of(), Set.of()), SearchPath.Topology.none());
     }
 
@@ -269,10 +269,12 @@ class SearchPathTest {
     }
 
     private static final class FieldOnlyRoot {
+        @SuppressWarnings("unused")
         private String code;
     }
 
     private static class BaseFieldRoot {
+        @SuppressWarnings("unused")
         private String inherited;
     }
 
@@ -306,7 +308,9 @@ class SearchPathTest {
         }
 
         public void setValues(int index, String value) {
-            // Indexed-only property for BeanUtils descriptor coverage.
+            if (index < 0) {
+                throw new IllegalArgumentException(value);
+            }
         }
     }
 

@@ -18,7 +18,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 
 class JpaSearchDefinitionValidatorTest {
     @Test
@@ -29,7 +29,7 @@ class JpaSearchDefinitionValidatorTest {
                         .filterable(filter -> filter.allow(EQUAL)))
                 .build();
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> validator(Map.of()).validate(definition));
 
@@ -45,7 +45,7 @@ class JpaSearchDefinitionValidatorTest {
                 .build();
         ManagedType<?> product = managedType(Map.of("email", attribute(Integer.class, false)));
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> validator(Map.of(TestTypes.Product.class, product)).validate(definition));
 
@@ -62,7 +62,7 @@ class JpaSearchDefinitionValidatorTest {
                 .build();
         ManagedType<?> product = managedType(Map.of("reviews", attribute(List.class, true)));
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> validator(Map.of(TestTypes.Product.class, product)).validate(definition));
 
@@ -79,7 +79,7 @@ class JpaSearchDefinitionValidatorTest {
                 .build();
         ManagedType<?> product = managedType(Map.of("customer", attribute(TestTypes.Customer.class, false)));
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> validator(Map.of(TestTypes.Product.class, product)).validate(definition));
 
@@ -120,7 +120,7 @@ class JpaSearchDefinitionValidatorTest {
         validateSubtype.setAccessible(true);
         JpaSearchDefinitionValidator validator = validator(Map.of());
 
-        InvocationTargetException exception = assertThrows(
+        InvocationTargetException exception = thrownBy(
                 InvocationTargetException.class,
                 () -> validateSubtype.invoke(validator, TestTypes.Product.class, String.class));
 

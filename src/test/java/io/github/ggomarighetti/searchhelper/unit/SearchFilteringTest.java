@@ -13,7 +13,7 @@ import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.E
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SearchFilteringTest {
@@ -30,13 +30,13 @@ class SearchFilteringTest {
 
         assertTrue(filtering.accepts(EQUAL, List.of("person@example.com"), ApplicationConversionService.getSharedInstance()));
         assertFalse(filtering.accepts(IN, List.of("person@example.com"), ApplicationConversionService.getSharedInstance()));
-        assertThrows(
+        thrownBy(
                 NullPointerException.class,
                 () -> filtering.accepts(null, List.of("person@example.com"), ApplicationConversionService.getSharedInstance()));
-        assertThrows(
+        thrownBy(
                 NullPointerException.class,
                 () -> filtering.accepts(EQUAL, null, ApplicationConversionService.getSharedInstance()));
-        assertThrows(
+        thrownBy(
                 NullPointerException.class,
                 () -> filtering.accepts(EQUAL, List.of("person@example.com"), null));
     }
@@ -48,13 +48,13 @@ class SearchFilteringTest {
         SearchFiltering.Builder<String> explicitType = SearchFiltering.builder();
         explicitType.allow(EQUAL, String.class, operator -> {});
 
-        assertThrows(IllegalArgumentException.class, () -> implicitType.allow(EQUAL));
-        assertThrows(IllegalArgumentException.class, () -> explicitType.allow(EQUAL, String.class, operator -> {}));
+        thrownBy(IllegalArgumentException.class, () -> implicitType.allow(EQUAL));
+        thrownBy(IllegalArgumentException.class, () -> explicitType.allow(EQUAL, String.class, operator -> {}));
     }
 
     @Test
     void reportsUnsupportedDefaultOperatorProfile() {
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> SearchFiltering.<TestTypes.Person>builder()
                         .withDefaults()

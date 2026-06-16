@@ -8,7 +8,7 @@ import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorRegistry;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 
 class RsqlAstTest {
     @Test
@@ -19,7 +19,7 @@ class RsqlAstTest {
                 "email",
                 List.of("person@example.com"));
 
-        assertThrows(IllegalArgumentException.class, () -> RsqlAst.from(node, new RsqlOperatorRegistry(List.of())));
+        thrownBy(IllegalArgumentException.class, () -> RsqlAst.from(node, new RsqlOperatorRegistry(List.of())));
     }
 
     @Test

@@ -21,7 +21,7 @@ import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.E
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RsqlEngineCoverageTest {
@@ -40,8 +40,8 @@ class RsqlEngineCoverageTest {
 
         assertTrue(engine.operators().descriptor(CUSTOM).isPresent());
         assertNotNull(engine.parse("email==value"));
-        assertThrows(NullPointerException.class, () -> SearchRsqlEngine.builder().operators(null));
-        assertThrows(NullPointerException.class, () -> SearchRsqlEngine.builder().parserFactory(null));
+        thrownBy(NullPointerException.class, () -> SearchRsqlEngine.builder().operators(null));
+        thrownBy(NullPointerException.class, () -> SearchRsqlEngine.builder().parserFactory(null));
     }
 
     @Test
@@ -66,10 +66,10 @@ class RsqlEngineCoverageTest {
                 .backend(new NoOpBackend())
                 .build();
 
-        SearchDefinitionValidationException missing = assertThrows(
+        SearchDefinitionValidationException missing = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> SearchRsqlEngine.defaults().validate(unregistered));
-        SearchDefinitionValidationException typeMismatch = assertThrows(
+        SearchDefinitionValidationException typeMismatch = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> mismatchEngine.validate(mismatch));
 
@@ -88,7 +88,7 @@ class RsqlEngineCoverageTest {
                 .backend(new NoOpBackend())
                 .build();
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> engine.validate(definition));
 
@@ -129,9 +129,9 @@ class RsqlEngineCoverageTest {
 
         assertFalse(options.strictEquality());
         assertEquals('\\', options.likeEscapeCharacter());
-        assertThrows(NullPointerException.class, () -> PerplexhubRsqlBackendOptions.builder().customize(null));
+        thrownBy(NullPointerException.class, () -> PerplexhubRsqlBackendOptions.builder().customize(null));
 
-        SearchDefinitionValidationException exception = assertThrows(
+        SearchDefinitionValidationException exception = thrownBy(
                 SearchDefinitionValidationException.class,
                 () -> new PerplexhubRsqlBackendAdapter(options).validate(engine, definition));
 

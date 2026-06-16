@@ -18,7 +18,7 @@ import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.I
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -73,7 +73,7 @@ class SearchDefinitionTest {
     void rejectsSubtypeOutsideEntityHierarchy() {
         var builder = SearchDefinition.builder().entity(TestTypes.Product.class);
 
-        IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException exception = thrownBy(
                 IllegalArgumentException.class,
                 () -> addInvalidSubtypeField(builder));
 
@@ -256,22 +256,22 @@ class SearchDefinitionTest {
                 .entity(TestTypes.Product.class)
                 .limits(limits -> limits.paging(paging -> paging.maxSize(10)));
 
-        assertThrows(IllegalArgumentException.class, pagingBuilder::paging);
-        assertThrows(
+        thrownBy(IllegalArgumentException.class, pagingBuilder::paging);
+        thrownBy(
                 IllegalArgumentException.class,
                 () -> explicitLimitsBuilder.limits(limits -> limits.paging(paging -> paging.maxSize(10))));
-        assertThrows(IllegalArgumentException.class, () -> customLimitsBuilder.limits(SearchPolicy.defaults()));
+        thrownBy(IllegalArgumentException.class, () -> customLimitsBuilder.limits(SearchPolicy.defaults()));
     }
 
     @Test
     void rejectsDuplicateFilteringAndSortingDeclarations() {
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 SearchDefinition.builder()
                         .entity(TestTypes.Product.class)
                         .fields(fields -> fields.add("email", String.class)
                                 .filterable()
                                 .filterable()));
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 SearchDefinition.builder()
                         .entity(TestTypes.Product.class)
                         .fields(fields -> fields.add("email", String.class)
@@ -293,7 +293,7 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsDuplicateSelectors() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, () ->
                 SearchDefinition.builder()
                         .entity(TestTypes.Product.class)
                         .fields(fields -> {
@@ -480,7 +480,7 @@ class SearchDefinitionTest {
                 .query(definitionQuery -> definitionQuery.specification(term ->
                         (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction()));
 
-        IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException exception = thrownBy(
                 IllegalArgumentException.class,
                 () -> declareDuplicateQuery(builder, query));
 
@@ -545,7 +545,7 @@ class SearchDefinitionTest {
         Set<?> operators = definition.filteringOperators();
 
         assertEquals(Set.of(EQUAL, IN), operators);
-        assertThrows(UnsupportedOperationException.class, operators::clear);
+        thrownBy(UnsupportedOperationException.class, operators::clear);
     }
 
     @Test
@@ -566,7 +566,7 @@ class SearchDefinitionTest {
                         .path("price")
                         .filterable(filter -> filter.allow(EQUAL)));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertEquals(
                 "selector 'amount' path 'price' resolves to type 'java.math.BigDecimal' but was declared as 'java.lang.String'",
@@ -580,7 +580,7 @@ class SearchDefinitionTest {
                         .path("person.taxIdentifier")
                         .filterable(filter -> {}));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertEquals("selector 'taxId' filtering must declare at least one allowed operator", exception.getMessage());
     }
@@ -593,7 +593,7 @@ class SearchDefinitionTest {
                         .sortable());
 
         SearchDefinitionValidationException exception =
-                assertThrows(SearchDefinitionValidationException.class, builder::build);
+                thrownBy(SearchDefinitionValidationException.class, builder::build);
 
         assertEquals(SearchDefinitionValidationException.PATH_LIMIT_EXCEEDED, exception.code());
     }
@@ -628,7 +628,7 @@ class SearchDefinitionTest {
                         .path("rawReviews.rating")
                         .filterable(filter -> filter.allow(EQUAL)));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("could not be resolved"));
     }
@@ -640,7 +640,7 @@ class SearchDefinitionTest {
                         .path("reviews.rating")
                         .sortable());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("must not traverse collection-valued paths"));
     }
@@ -652,7 +652,7 @@ class SearchDefinitionTest {
                         .path("tags")
                         .sortable());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("must not traverse collection-valued paths"));
     }
@@ -664,7 +664,7 @@ class SearchDefinitionTest {
                         .path("price")
                         .sortable(SearchSorting.Builder::allowIgnoreCase));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = thrownBy(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("ignoreCase sorting requires a CharSequence path"));
     }

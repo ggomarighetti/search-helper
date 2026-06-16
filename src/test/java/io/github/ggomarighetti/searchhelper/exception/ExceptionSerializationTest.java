@@ -1,7 +1,7 @@
 package io.github.ggomarighetti.searchhelper.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.github.ggomarighetti.searchhelper.unit.ExceptionAssertions.thrownBy;
 
 import io.github.ggomarighetti.searchhelper.validation.RuleViolation;
 import java.io.ByteArrayInputStream;
@@ -14,17 +14,17 @@ import org.junit.jupiter.api.Test;
 class ExceptionSerializationTest {
     @Test
     void rejectsBlankExceptionCodesAndNullViolationLists() {
-        assertThrows(IllegalArgumentException.class, () -> new SearchDefinitionValidationException(" ", "invalid"));
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () -> new SearchDefinitionValidationException(" ", "invalid"));
+        thrownBy(IllegalArgumentException.class, () ->
                 new SearchDefinitionValidationException(" ", "invalid", new IllegalStateException("cause")));
-        assertThrows(IllegalArgumentException.class, () ->
+        thrownBy(IllegalArgumentException.class, () ->
                 new RsqlFilterValidationException(" ", "invalid", List.of()));
-        assertThrows(NullPointerException.class, () ->
+        thrownBy(NullPointerException.class, () ->
                 new SearchQueryValidationException(
                         SearchQueryValidationException.QUERY_RULES_FORBIDDEN,
                         "invalid",
                         (List<RuleViolation>) null));
-        assertThrows(NullPointerException.class, () ->
+        thrownBy(NullPointerException.class, () ->
                 new SearchPageableValidationException(
                         SearchPageableValidationException.PAGE_RULES_FORBIDDEN,
                         "invalid",

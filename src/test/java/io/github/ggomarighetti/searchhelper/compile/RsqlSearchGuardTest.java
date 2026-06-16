@@ -626,7 +626,7 @@ class RsqlSearchGuardTest {
     }
 
     @Test
-    void recordsNestedOrMetadataWithTerminalJoinRoots() throws ReflectiveOperationException {
+    void recordsNestedOrMetadataWithTerminalJoinRoots() {
         SearchDefinition<Product> definition = SearchDefinition.builder()
                 .entity(Product.class)
                 .fields(fields -> {
