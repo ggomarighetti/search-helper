@@ -372,7 +372,7 @@ public final class SearchDefinition<T> {
      */
     public static final class Fields<T> {
         private final Class<T> entity;
-        private final Map<String, SearchField.Builder<?>> fields = new LinkedHashMap<>();
+        private final Map<String, SearchField.Builder<?>> fieldBuilders = new LinkedHashMap<>();
 
         private Fields(Class<T> entity) {
             this.entity = entity;
@@ -391,7 +391,7 @@ public final class SearchDefinition<T> {
             Assert.notNull(type, "type must not be null");
 
             SearchField.Builder<V> field = SearchField.builder(entity, selector, type);
-            if (fields.putIfAbsent(selector, field) != null) {
+            if (fieldBuilders.putIfAbsent(selector, field) != null) {
                 throw new IllegalArgumentException("selector '%s' is already declared".formatted(selector));
             }
             return field;
@@ -415,7 +415,7 @@ public final class SearchDefinition<T> {
 
         private Map<String, SearchField<?>> build(SearchPolicy.Paths pathLimits) {
             Map<String, SearchField<?>> built = new LinkedHashMap<>();
-            fields.forEach((selector, field) -> built.put(selector, field.build(pathLimits)));
+            fieldBuilders.forEach((selector, field) -> built.put(selector, field.build(pathLimits)));
             return built;
         }
     }
