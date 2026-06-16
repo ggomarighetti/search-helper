@@ -25,7 +25,7 @@ public final class RsqlOperatorRegistry {
         Objects.requireNonNull(descriptors, "descriptors must not be null");
         Map<RsqlOperator, RsqlOperatorDescriptor> operators = new LinkedHashMap<>();
         Map<String, RsqlOperatorDescriptor> symbols = new LinkedHashMap<>();
-        Set<ComparisonOperator> parserOperators = new LinkedHashSet<>();
+        Set<ComparisonOperator> parsedOperators = new LinkedHashSet<>();
         for (RsqlOperatorDescriptor descriptor : descriptors) {
             RsqlOperatorDescriptor previous = operators.putIfAbsent(descriptor.operator(), descriptor);
             if (previous != null) {
@@ -37,11 +37,11 @@ public final class RsqlOperatorRegistry {
                     throw new IllegalArgumentException("RSQL symbol '%s' is already registered".formatted(symbol));
                 }
             }
-            parserOperators.add(descriptor.comparisonOperator());
+            parsedOperators.add(descriptor.comparisonOperator());
         }
         this.byOperator = Collections.unmodifiableMap(operators);
         this.bySymbol = Collections.unmodifiableMap(symbols);
-        this.parserOperators = Collections.unmodifiableSet(parserOperators);
+        this.parserOperators = Collections.unmodifiableSet(parsedOperators);
     }
 
     /**
