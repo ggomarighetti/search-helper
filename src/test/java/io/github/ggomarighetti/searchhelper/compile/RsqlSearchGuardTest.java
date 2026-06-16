@@ -315,9 +315,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsUnknownField() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("passwordHash==abc", filters()));
+                () -> guard.specification("passwordHash==abc", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertEquals(1, exception.errors().size());
