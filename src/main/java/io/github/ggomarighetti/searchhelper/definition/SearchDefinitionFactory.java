@@ -4,16 +4,14 @@ import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import java.util.Objects;
 
 /** Creates definition builders with application-wide path limits. */
-public final class SearchDefinitionFactory {
-    private final SearchPolicy policy;
-
+public record SearchDefinitionFactory(SearchPolicy policy) {
     /**
      * Creates a factory.
      *
      * @param policy application-wide policy
      */
-    public SearchDefinitionFactory(SearchPolicy policy) {
-        this.policy = Objects.requireNonNull(policy, "policy must not be null");
+    public SearchDefinitionFactory {
+        policy = Objects.requireNonNull(policy, "policy must not be null");
     }
 
     /**
@@ -23,14 +21,5 @@ public final class SearchDefinitionFactory {
      */
     public SearchDefinition.EntityStep builder() {
         return SearchDefinition.builder(policy);
-    }
-
-    /**
-     * Returns the factory policy.
-     *
-     * @return immutable application-wide policy
-     */
-    public SearchPolicy policy() {
-        return policy;
     }
 }
