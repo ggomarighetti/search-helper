@@ -132,12 +132,11 @@ public final class JpaSearchDefinitionValidator implements SearchDefinitionValid
             String capability,
             String path,
             Throwable cause) {
-        SearchDefinitionValidationException exception = new SearchDefinitionValidationException(
+        return new SearchDefinitionValidationException(
                 SearchDefinitionValidationException.JPA_PATH_UNRESOLVED,
                 "selector '%s' %s path '%s' could not be resolved against JPA entity '%s'"
                         .formatted(selector, capability, path, entity.getName()),
                 cause);
-        return exception;
     }
 
     private static SearchDefinitionValidationException unresolvedEntity(Class<?> entity, Throwable cause) {
