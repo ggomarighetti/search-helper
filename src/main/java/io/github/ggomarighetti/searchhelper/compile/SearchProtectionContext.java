@@ -200,28 +200,8 @@ final class SearchProtectionContext {
 
     public void completeRequest() {
         validateFilterTopology();
-        if (mode == SearchCompilationMode.PAGE && paged) {
-            SearchPolicy.Paging.Page pageLimits = policy.paging().page();
-            if (!pageLimits.allowToManyCount() && !toManyPaths.isEmpty()) {
-                throw exceeded("paging.page.allow-to-many-count", toManyPaths.size(), 0);
-            }
-            requireAtMost("paging.page.max-to-many-paths", toManyPaths.size(), pageLimits.maxToManyPaths());
-            if (!pageLimits.allowDistinctCount() && distinct) {
-                throw exceeded("paging.page.allow-distinct-count", 1, 0);
-            }
-            requireAtMost("paging.page.max-joined-paths", joinedPaths.size(), pageLimits.maxJoinedPaths());
-        }
-        if (queryPresent) {
-            if (!queryLimits.allowWithToManyFilter() && !toManyPaths.isEmpty()) {
-                throw exceeded("query.allow-with-to-many-filter", toManyPaths.size(), 0);
-            }
-            if (!queryLimits.allowWithRelationSort() && relationSortOrders > 0) {
-                throw exceeded("query.allow-with-relation-sort", relationSortOrders, 0);
-            }
-            if (!queryLimits.allowWithUnpaged() && unpagedInput) {
-                throw exceeded("query.allow-with-unpaged", 1, 0);
-            }
-        }
+        validatePageRequest();
+        validateQueryRequest();
     }
 
     public int joinedPaths() {
@@ -251,6 +231,36 @@ final class SearchProtectionContext {
         requireAtMost("filter.max-to-many-paths", toManyPaths.size(), filterLimits.maxToManyPaths());
         if (!filterLimits.allowToManyFiltering() && !toManyPaths.isEmpty()) {
             throw exceeded("filter.allow-to-many-filtering", toManyPaths.size(), 0);
+        }
+    }
+
+    private void validatePageRequest() {
+        if (mode != SearchCompilationMode.PAGE || !paged) {
+            return;
+        }
+        SearchPolicy.Paging.Page pageLimits = policy.paging().page();
+        if (!pageLimits.allowToManyCount() && !toManyPaths.isEmpty()) {
+            throw exceeded("paging.page.allow-to-many-count", toManyPaths.size(), 0);
+        }
+        requireAtMost("paging.page.max-to-many-paths", toManyPaths.size(), pageLimits.maxToManyPaths());
+        if (!pageLimits.allowDistinctCount() && distinct) {
+            throw exceeded("paging.page.allow-distinct-count", 1, 0);
+        }
+        requireAtMost("paging.page.max-joined-paths", joinedPaths.size(), pageLimits.maxJoinedPaths());
+    }
+
+    private void validateQueryRequest() {
+        if (!queryPresent) {
+            return;
+        }
+        if (!queryLimits.allowWithToManyFilter() && !toManyPaths.isEmpty()) {
+            throw exceeded("query.allow-with-to-many-filter", toManyPaths.size(), 0);
+        }
+        if (!queryLimits.allowWithRelationSort() && relationSortOrders > 0) {
+            throw exceeded("query.allow-with-relation-sort", relationSortOrders, 0);
+        }
+        if (!queryLimits.allowWithUnpaged() && unpagedInput) {
+            throw exceeded("query.allow-with-unpaged", 1, 0);
         }
     }
 
