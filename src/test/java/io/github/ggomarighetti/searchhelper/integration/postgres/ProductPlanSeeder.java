@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public final class ProductPlanSeeder {
     }
 
     public static LocalDate releaseDate(long id) {
-        return LocalDate.of(2020, 1, 1).plusDays(id % 1_800);
+        return LocalDate.of(2020, Month.JANUARY, 1).plusDays(id % 1_800);
     }
 
     private static void seedCategories(JdbcTemplate jdbcTemplate) {
