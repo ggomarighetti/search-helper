@@ -215,9 +215,10 @@ class SearchProtectionTest {
                 .query(query -> query.specification(term -> Specification.unrestricted()))
                 .build();
 
+        Pageable pageable = Pageable.unpaged();
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> compiler.compile(null, "tablet", Pageable.unpaged(), definition));
+                () -> compiler.compile(null, "tablet", pageable, definition));
 
         assertRule(exception, "query.allow-with-unpaged", 1, 0);
     }
