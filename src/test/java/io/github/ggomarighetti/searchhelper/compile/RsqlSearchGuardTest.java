@@ -6,7 +6,6 @@ import io.github.ggomarighetti.searchhelper.exception.RsqlValidationError;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.filter.FilterOperator;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Status;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.backend.RsqlBackendAdapter;
