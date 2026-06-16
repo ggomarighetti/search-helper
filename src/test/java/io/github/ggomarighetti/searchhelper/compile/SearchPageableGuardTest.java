@@ -186,10 +186,11 @@ class SearchPageableGuardTest {
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("email", String.class).sortable())
                 .build();
+        PageRequest pageRequest = PageRequest.of(0, 25);
 
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25), definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.PAGE_RULES_FORBIDDEN);
     }
