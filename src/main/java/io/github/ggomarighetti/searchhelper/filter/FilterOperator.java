@@ -168,7 +168,7 @@ public final class FilterOperator<T> {
      * @param <T> value type validated by the rules
      */
     public static final class Rules<T> {
-        private final List<ConstraintDef<?, ?>> rules = new ArrayList<>();
+        private final List<ConstraintDef<?, ?>> constraints = new ArrayList<>();
 
         /** Creates an empty rule declaration. */
         public Rules() {
@@ -182,12 +182,12 @@ public final class FilterOperator<T> {
          * @return this declaration
          */
         public Rules<T> rule(ConstraintDef<?, ?> rule) {
-            rules.add(Objects.requireNonNull(rule, "rule must not be null"));
+            constraints.add(Objects.requireNonNull(rule, "rule must not be null"));
             return this;
         }
 
         private List<ConstraintDef<?, ?>> rules() {
-            return List.copyOf(rules);
+            return List.copyOf(constraints);
         }
     }
 }
