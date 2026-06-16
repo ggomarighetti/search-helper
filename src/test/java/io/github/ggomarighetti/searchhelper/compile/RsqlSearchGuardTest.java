@@ -105,10 +105,11 @@ class RsqlSearchGuardTest {
                         .backend(throwingBackend)
                         .build(),
                 SearchPolicy.defaults());
+        SearchDefinition<TestTypes.Product> definition = filters();
 
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> throwingGuard.specification("taxId==20123456789", filters()));
+                () -> throwingGuard.specification("taxId==20123456789", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
     }
@@ -543,8 +544,9 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsNullRsqlAsLimitViolation() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception =
-                assertThrows(RsqlFilterValidationException.class, () -> guard.specification(null, filters()));
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification(null, definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.LIMIT_EXCEEDED);
     }
