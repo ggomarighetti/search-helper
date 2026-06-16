@@ -441,9 +441,11 @@ class RsqlSearchGuardTest {
         RsqlFilterValidationException nodes = assertThrows(
                 RsqlFilterValidationException.class,
                 () -> guard.specification(filter, nodesDefinition));
+        SearchDefinition<TestTypes.Product> comparisonsDefinition =
+                filters(limits -> limits.filter(value -> value.maxComparisons(1)));
         SearchProtectionException comparisons = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification(filter, filters(limits -> limits.filter(value -> value.maxComparisons(1)))));
+                () -> guard.specification(filter, comparisonsDefinition));
         RsqlFilterValidationException depth = assertThrows(
                 RsqlFilterValidationException.class,
                 () -> guard.specification(filter, filters(limits -> limits.rsql(rsql -> rsql.maxDepth(1)))));
