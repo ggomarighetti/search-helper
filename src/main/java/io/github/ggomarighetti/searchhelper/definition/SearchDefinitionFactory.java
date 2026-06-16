@@ -11,7 +11,7 @@ public record SearchDefinitionFactory(SearchPolicy policy) {
      * @param policy application-wide policy
      */
     public SearchDefinitionFactory {
-        policy = Objects.requireNonNull(policy, "policy must not be null");
+        Objects.requireNonNull(policy, "policy must not be null");
     }
 
     /**
