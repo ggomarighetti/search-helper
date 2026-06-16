@@ -193,8 +193,9 @@ class RsqlPropertyTest {
     }
 
     private static void assertLimitExceeded(String input, SearchDefinition<Product> definition) {
+        RsqlSearchGuard guard = new RsqlSearchGuard();
         RsqlFilterValidationException exception =
-                assertThrows(RsqlFilterValidationException.class, () -> new RsqlSearchGuard().specification(input, definition));
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification(input, definition));
         assertEquals(RsqlFilterValidationException.LIMIT_EXCEEDED, exception.code(), input);
     }
 
