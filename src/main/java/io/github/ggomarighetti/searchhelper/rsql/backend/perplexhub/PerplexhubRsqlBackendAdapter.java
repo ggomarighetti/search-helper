@@ -88,7 +88,7 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
     private static RSQLCustomPredicate<?> customPredicate(
             RsqlOperatorDescriptor descriptor,
             RsqlJpaPredicateFactory factory) {
-        Class<? extends Comparable<?>> type = descriptor.argumentType().orElse((Class) String.class);
+        Class<? extends Comparable<?>> type = descriptor.argumentType().orElse(String.class);
         Function<RSQLCustomPredicateInput, Predicate> converter =
                 input -> factory.toPredicate(context(input, descriptor.operator()));
         return new RSQLCustomPredicate(
