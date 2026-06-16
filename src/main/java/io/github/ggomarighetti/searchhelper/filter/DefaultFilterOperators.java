@@ -21,9 +21,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Calendar;
 import java.util.Currency;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Objects;
@@ -101,8 +99,6 @@ public final class DefaultFilterOperators {
             Double.class,
             BigInteger.class,
             BigDecimal.class,
-            Date.class,
-            Calendar.class,
             Instant.class,
             LocalDate.class,
             LocalDateTime.class,
