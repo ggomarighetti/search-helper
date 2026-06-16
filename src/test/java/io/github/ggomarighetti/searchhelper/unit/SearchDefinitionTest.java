@@ -464,7 +464,7 @@ class SearchDefinitionTest {
         Set<?> operators = definition.filteringOperators();
 
         assertEquals(Set.of(EQUAL, IN), operators);
-        assertThrows(UnsupportedOperationException.class, () -> definition.filteringOperators().clear());
+        assertThrows(UnsupportedOperationException.class, operators::clear);
     }
 
     @Test
