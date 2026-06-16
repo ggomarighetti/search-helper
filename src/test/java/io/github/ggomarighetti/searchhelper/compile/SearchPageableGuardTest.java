@@ -281,11 +281,10 @@ class SearchPageableGuardTest {
         SearchPageableValidationException duplicatedSelector = assertThrows(
                 SearchPageableValidationException.class,
                 () -> guard.pageable(duplicatedSort, definition));
+        PageRequest ignoreCaseSort = PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").ignoreCase()));
         SearchPageableValidationException ignoreCase = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").ignoreCase())),
-                        definition()));
+                () -> guard.pageable(ignoreCaseSort, definition));
         SearchPageableValidationException nullHandling = assertThrows(
                 SearchPageableValidationException.class,
                 () -> guard.pageable(
