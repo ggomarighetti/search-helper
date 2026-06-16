@@ -554,12 +554,12 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsSortingThroughCollectionValuedPath() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("reviewRating", Integer.class)
-                                .path("reviews.rating")
-                                .sortable())
-                        .build());
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("reviewRating", Integer.class)
+                        .path("reviews.rating")
+                        .sortable());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("must not traverse collection-valued paths"));
     }
