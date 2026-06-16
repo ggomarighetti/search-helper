@@ -3,13 +3,17 @@ package io.github.ggomarighetti.searchhelper.compile;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.exception.SearchQueryValidationException;
+import io.github.ggomarighetti.searchhelper.definition.SearchPath;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.operator.DefaultRsqlOperatorDescriptors;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorDescriptor;
+import io.github.ggomarighetti.searchhelper.sort.SearchSorting;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
+import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.data.domain.PageRequest;
@@ -18,11 +22,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.BETWEEN;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IGNORE_CASE;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IGNORE_CASE_LIKE;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IGNORE_CASE_NOT_LIKE;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.IN;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.LIKE;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_BETWEEN;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_EQUAL;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_IN;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_LIKE;
+import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.NOT_NULL;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -172,10 +181,32 @@ class SearchProtectionTest {
                                 descriptor(NOT_EQUAL),
                                 1,
                                 List.of("10")));
+        SearchProtectionException negatedBetween = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(
+                        SearchPolicy.builder().filter(filter -> filter.maxNegatedComparisons(0)).build(),
+                        SearchCompilationMode.PAGE)
+                        .recordComparison(
+                                definition.field("amount").orElseThrow(),
+                                descriptor(NOT_BETWEEN),
+                                2,
+                                List.of("10", "20")));
+        SearchProtectionException negatedNull = assertThrows(
+                SearchProtectionException.class,
+                () -> new SearchProtectionContext(
+                        SearchPolicy.builder().filter(filter -> filter.maxNegatedComparisons(0)).build(),
+                        SearchCompilationMode.PAGE)
+                        .recordComparison(
+                                definition.field("amount").orElseThrow(),
+                                descriptor(NOT_NULL),
+                                0,
+                                List.of()));
 
         assertRule(notIn, "filter.max-not-in-values", 2, 1);
         assertRule(between, "filter.max-between-ranges", 1, 0);
         assertRule(negated, "filter.max-negated-comparisons", 1, 0);
+        assertRule(negatedBetween, "filter.max-negated-comparisons", 1, 0);
+        assertRule(negatedNull, "filter.max-negated-comparisons", 1, 0);
     }
 
     @Test
@@ -228,12 +259,147 @@ class SearchProtectionTest {
                 .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like
+                        .minLiteralLength(0)
+                        .allowLeadingWildcard(true)
+                        .allowTrailingWildcard(true)
+                        .allowContains(true)))
+                .build())
+                .recordComparison(nameField, descriptor(NOT_LIKE), 1, List.of("abc")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .build())
+                .recordComparison(nameField, descriptor(IGNORE_CASE), 1, List.of("abc")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like
+                        .minLiteralLength(0)
+                        .allowLeadingWildcard(true)
+                        .allowTrailingWildcard(true)
+                        .allowContains(true)))
+                .build())
+                .recordComparison(nameField, descriptor(IGNORE_CASE_NOT_LIKE), 1, List.of("\\*abc\\*")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like
+                        .minLiteralLength(0)
+                        .maxWildcards(2)
+                        .allowLeadingWildcard(true)
+                        .allowTrailingWildcard(true)
+                        .allowContains(true)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("%abc%")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like
+                        .minLiteralLength(0)
+                        .maxWildcards(2)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("a%b")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like
+                        .minLiteralLength(0)
+                        .allowLeadingWildcard(true)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("*abc")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("abc*")));
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .build())
+                .recordComparison(nameField, descriptor(LIKE), 1, List.of("\\%abc\\%")));
         assertRule(ignoreCase, "filter.like.allow-ignore-case", 1, 0);
         assertRule(length, "filter.like.max-pattern-length", 3, 2);
         assertRule(wildcards, "filter.like.max-wildcards", 1, 0);
         assertRule(leading, "filter.like.allow-leading-wildcard", 1, 0);
         assertRule(contains, "filter.like.allow-contains", 1, 0);
         assertRule(literal, "filter.like.min-literal-length", 1, 3);
+    }
+
+    @Test
+    void rejectsDisabledToManyFilteringAndSorting() throws ReflectiveOperationException {
+        SearchPolicy filteringPolicy = SearchPolicy.builder()
+                .filter(filter -> filter.allowToManyFiltering(false))
+                .build();
+        SearchDefinition<TestTypes.Product> filteringDefinition = comparisonDefinition(filteringPolicy);
+        SearchProtectionException filtering = assertThrows(
+                SearchProtectionException.class,
+                () -> context(filteringPolicy).recordComparison(
+                        filteringDefinition.field("reviewRating").orElseThrow(),
+                        descriptor(EQUAL),
+                        1,
+                        List.of("5")));
+        SearchPolicy sortingPolicy = SearchPolicy.builder()
+                .sorting(sorting -> sorting.disallowToManySorting(true))
+                .build();
+        SearchProtectionException sorting = assertThrows(
+                SearchProtectionException.class,
+                () -> context(sortingPolicy).recordSort(
+                        sortingWithToManyTopology(),
+                        Sort.Order.asc("tags")));
+
+        assertRule(filtering, "filter.allow-to-many-filtering", 1, 0);
+        assertRule(sorting, "sorting.disallow-to-many-sorting", 1, 0);
+    }
+
+    @Test
+    void allowsInverseProtectionBranchCombinations() throws ReflectiveOperationException {
+        SearchDefinition<TestTypes.Product> defaultDefinition = comparisonDefinition(SearchPolicy.defaults());
+        SearchProtectionContext distinctNotRequired = context(SearchPolicy.builder()
+                .filter(filter -> filter.requireDistinctForToMany(false))
+                .build());
+        distinctNotRequired.recordComparison(
+                defaultDefinition.field("reviewRating").orElseThrow(),
+                descriptor(EQUAL),
+                1,
+                List.of("5"));
+        assertDoesNotThrow(distinctNotRequired::completeFilter);
+        assertDoesNotThrow(() -> context(SearchPolicy.builder()
+                .sorting(sorting -> sorting.disallowToManySorting(false))
+                .build())
+                .recordSort(sortingWithToManyTopology(), Sort.Order.asc("tags")));
+
+        SearchPolicy toManyFilteringDisabled = SearchPolicy.builder()
+                .filter(filter -> filter.allowToManyFiltering(false))
+                .build();
+        SearchProtectionContext scalarFiltering = context(toManyFilteringDisabled);
+        scalarFiltering.recordComparison(
+                comparisonDefinition(toManyFilteringDisabled).field("amount").orElseThrow(),
+                descriptor(EQUAL),
+                1,
+                List.of("10"));
+        assertDoesNotThrow(scalarFiltering::completeFilter);
+
+        SearchProtectionContext countWithoutToMany = context(SearchPolicy.builder()
+                .paging(paging -> paging.page(page -> page.allowToManyCount(false)))
+                .build());
+        countWithoutToMany.recordPaging(PageRequest.of(0, 10));
+        assertDoesNotThrow(countWithoutToMany::completeRequest);
+        SearchProtectionContext countWithoutDistinct = context(SearchPolicy.builder()
+                .paging(paging -> paging.page(page -> page.allowDistinctCount(false)))
+                .build());
+        countWithoutDistinct.recordPaging(PageRequest.of(0, 10));
+        assertDoesNotThrow(countWithoutDistinct::completeRequest);
+
+        SearchProtectionContext queryWithoutToMany = context(SearchPolicy.builder()
+                .query(query -> query.allowWithToManyFilter(false))
+                .build());
+        queryWithoutToMany.recordQuery("tablet");
+        assertDoesNotThrow(queryWithoutToMany::completeRequest);
+        SearchProtectionContext queryWithoutRelationSort = context(SearchPolicy.builder()
+                .query(query -> query.allowWithRelationSort(false))
+                .build());
+        queryWithoutRelationSort.recordQuery("tablet");
+        queryWithoutRelationSort.recordSort(
+                defaultDefinition.field("amount").orElseThrow().sorting(),
+                Sort.Order.asc("amount"));
+        assertDoesNotThrow(queryWithoutRelationSort::completeRequest);
+        SearchProtectionContext queryWithoutUnpaged = context(SearchPolicy.builder()
+                .query(query -> query.allowWithUnpaged(false))
+                .build());
+        queryWithoutUnpaged.recordQuery("tablet");
+        queryWithoutUnpaged.recordPaging(PageRequest.of(0, 10));
+        assertDoesNotThrow(queryWithoutUnpaged::completeRequest);
     }
 
     @Test
@@ -511,6 +677,24 @@ class SearchProtectionTest {
                 .filter(candidate -> operator.equals(candidate.operator()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private static SearchSorting sortingWithToManyTopology() throws ReflectiveOperationException {
+        Constructor<SearchSorting> constructor = SearchSorting.class.getDeclaredConstructor(
+                boolean.class,
+                String.class,
+                Set.class,
+                boolean.class,
+                Set.class,
+                SearchPath.Topology.class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(
+                true,
+                "tags",
+                Set.of(Sort.Direction.ASC),
+                false,
+                Set.of(Sort.NullHandling.NATIVE),
+                new SearchPath.Topology(1, Set.of("tags"), Set.of("tags")));
     }
 
     private static SearchDefinition<TestTypes.Product> comparisonDefinition(SearchPolicy policy) {

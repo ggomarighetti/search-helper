@@ -52,6 +52,39 @@ class SearchQueryGuardTest {
     }
 
     @Test
+    void rejectsQueryWhenPolicyRequiresRulesAndDefinitionHasNone() {
+        SearchQueryGuard guarded = new SearchQueryGuard(SearchPolicy.builder()
+                .query(query -> query.requireValidator(true))
+                .build());
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("name", String.class))
+                .query(query -> query.specification(term -> unrestricted()))
+                .build();
+
+        SearchQueryValidationException exception = assertThrows(
+                SearchQueryValidationException.class,
+                () -> guarded.specification("tablet", definition));
+
+        assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
+    }
+
+    @Test
+    void acceptsQueryWhenPolicyRequiresRulesAndDefinitionHasRules() {
+        SearchQueryGuard guarded = new SearchQueryGuard(SearchPolicy.builder()
+                .query(query -> query.requireValidator(true))
+                .build());
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("name", String.class))
+                .query(query -> {
+                    query.rule(new SizeDef().min(3));
+                    query.specification(term -> unrestricted());
+                })
+                .build();
+
+        assertNotNull(guarded.specification("tablet", definition));
+    }
+
+    @Test
     void rejectsQueryLongerThanSafetyLimitBeforeSpecificationFactoryRuns() {
         AtomicReference<String> captured = new AtomicReference<>();
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)

@@ -3,6 +3,7 @@ package io.github.ggomarighetti.searchhelper.compile;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import cz.jirutka.rsql.parser.ast.Node;
+import cz.jirutka.rsql.parser.ast.OrNode;
 import cz.jirutka.rsql.parser.ast.RSQLVisitor;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.RsqlFilterValidationException;
@@ -10,6 +11,7 @@ import io.github.ggomarighetti.searchhelper.exception.RsqlValidationError;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.filter.FilterOperator;
+import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
@@ -21,6 +23,7 @@ import io.github.ggomarighetti.searchhelper.rsql.RsqlAst;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import io.github.ggomarighetti.searchhelper.rsql.SearchRsqlEngine;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -620,6 +623,46 @@ class RsqlSearchGuardTest {
                 () -> guard.specification("taxId==20123456789,email==person@example.com", definition));
 
         assertProtectionRule(exception, "filter.max-or-branches");
+    }
+
+    @Test
+    void recordsNestedOrMetadataWithTerminalJoinRoots() throws ReflectiveOperationException {
+        SearchDefinition<Product> definition = SearchDefinition.builder()
+                .entity(Product.class)
+                .fields(fields -> {
+                    fields.add("categoryCode", String.class)
+                            .path("category.code")
+                            .filterable(filter -> filter.allow(EQUAL));
+                    fields.add("sku", String.class)
+                            .filterable(filter -> filter.allow(EQUAL));
+                })
+                .build();
+        RsqlRulesValidator validator = validator(definition, SearchRsqlEngine.defaults().operators());
+
+        List<RsqlValidationError> errors = validator.validate(SearchRsqlEngine.defaults()
+                .parse("(categoryCode==laptops;sku==ABC),(sku==DEF)"));
+
+        assertEquals(List.of(), errors);
+    }
+
+    @Test
+    void privateRsqlHelpersHandleUnsupportedNodesAndRootPaths() throws ReflectiveOperationException {
+        Method requiresDistinct = RsqlSearchGuard.class.getDeclaredMethod(
+                "requiresDistinct",
+                Node.class,
+                SearchDefinition.class);
+        requiresDistinct.setAccessible(true);
+        Method rootPath = RsqlRulesValidator.class.getDeclaredMethod("rootPath", String.class);
+        rootPath.setAccessible(true);
+        Method orMetadata = RsqlRulesValidator.class.getDeclaredMethod("orMetadata", OrNode.class);
+        orMetadata.setAccessible(true);
+
+        assertEquals(false, requiresDistinct.invoke(null, new UnsupportedNode(), filters()));
+        assertEquals("category", rootPath.invoke(null, "category"));
+        assertEquals("category", rootPath.invoke(null, "category.code"));
+        assertNotNull(orMetadata.invoke(
+                validator(filters(), SearchRsqlEngine.defaults().operators()),
+                new OrNode(List.of(new UnsupportedNode()))));
     }
 
     @Test

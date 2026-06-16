@@ -189,7 +189,9 @@ class SmallApiCoverageTest {
 
         assertTrue(exact.accepts(2));
         assertFalse(exact.accepts(1));
+        assertFalse(exact.accepts(3));
         assertFalse(bounded.accepts(0));
+        assertFalse(bounded.accepts(4));
         assertTrue(bounded.accepts(3));
         assertTrue(unbounded.accepts(100));
         assertThrows(IllegalArgumentException.class, () -> RsqlOperatorArity.exact(-1));

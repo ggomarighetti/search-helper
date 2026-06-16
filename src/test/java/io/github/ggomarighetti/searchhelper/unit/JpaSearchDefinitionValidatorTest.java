@@ -10,6 +10,7 @@ import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.Type;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -97,6 +98,35 @@ class JpaSearchDefinitionValidatorTest {
         ManagedType<?> review = managedType(Map.of("rating", attribute(int.class, false)));
 
         validator(Map.of(TestTypes.Product.class, product, TestTypes.Review.class, review)).validate(definition);
+    }
+
+    @Test
+    void resolvesTerminalPluralAttributesWithoutElementTraversal() {
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("tags", List.class)
+                        .path("tags")
+                        .filterable(filter -> filter.allow(EQUAL)))
+                .build();
+        ManagedType<?> product = managedType(Map.of("tags", pluralAttribute(String.class)));
+
+        validator(Map.of(TestTypes.Product.class, product)).validate(definition);
+    }
+
+    @Test
+    void rejectsSubtypeRootsOutsideTheDefinitionEntityHierarchy() throws Exception {
+        Method validateSubtype =
+                JpaSearchDefinitionValidator.class.getDeclaredMethod("validateSubtype", Class.class, Class.class);
+        validateSubtype.setAccessible(true);
+        JpaSearchDefinitionValidator validator = validator(Map.of());
+
+        InvocationTargetException exception = assertThrows(
+                InvocationTargetException.class,
+                () -> validateSubtype.invoke(validator, TestTypes.Product.class, String.class));
+
+        assertEquals(
+                SearchDefinitionValidationException.JPA_PATH_UNRESOLVED,
+                ((SearchDefinitionValidationException) exception.getCause()).code());
     }
 
     private static JpaSearchDefinitionValidator validator(Map<Class<?>, ManagedType<?>> managedTypes) {

@@ -10,6 +10,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import java.math.BigDecimal;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,10 +55,17 @@ class SearchPathTest {
                 "inherited",
                 String.class,
                 DEEP_PATHS);
+        SearchPath.Metadata indexedOnly = SearchPath.metadata(
+                IndexedOnlyRoot.class,
+                "values",
+                "values",
+                String[].class,
+                DEEP_PATHS);
 
         assertEquals(String.class, fieldOnly.type());
         assertEquals(String.class, setterOnly.type());
         assertEquals(String.class, inherited.type());
+        assertEquals(String[].class, indexedOnly.type());
     }
 
     @Test
@@ -98,6 +111,9 @@ class SearchPathTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "arrayLines.sku", String.class, DEEP_PATHS));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(GenericRoot.class, "sku", "lineArrays.sku", String.class, DEEP_PATHS));
     }
 
     @Test
@@ -108,6 +124,9 @@ class SearchPathTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(TestTypes.Product.class, "missing", "missing", String.class, DEEP_PATHS));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(IndexedOnlyNoFieldRoot.class, "values", "values", String.class, DEEP_PATHS));
 
         SearchDefinitionValidationException exception = assertThrows(
                 SearchDefinitionValidationException.class,
@@ -128,6 +147,7 @@ class SearchPathTest {
         assertTopology("entityTarget.name", Set.of("entityTarget"), Set.of());
         assertTopology("orders.number", Set.of("orders"), Set.of("orders"));
         assertTopology("tags.label", Set.of("tags"), Set.of("tags"));
+        assertTopology("scalarLabel", Set.of("scalarLabel"), Set.of("scalarLabel"));
 
         SearchPath.Topology labels = SearchPath.topology(TopologyRoot.class, "labels", "labels", DEEP_PATHS);
         assertEquals(Set.of("labels"), labels.joinedPaths());
@@ -151,6 +171,44 @@ class SearchPathTest {
         assertEquals(new SearchPath.Topology(0, Set.of(), Set.of()), SearchPath.Topology.none());
     }
 
+    @Test
+    void privateGenericHelpersHandleExoticReflectiveTypes() throws ReflectiveOperationException {
+        Method collectionElementType = SearchPath.class.getDeclaredMethod(
+                "collectionElementType",
+                Class.class,
+                Type.class);
+        collectionElementType.setAccessible(true);
+        Method genericArgumentFromType = SearchPath.class.getDeclaredMethod(
+                "genericArgument",
+                Type.class,
+                Class.class,
+                int.class);
+        genericArgumentFromType.setAccessible(true);
+        Method genericArgumentFromClass = SearchPath.class.getDeclaredMethod(
+                "genericArgument",
+                Class.class,
+                Class.class,
+                int.class);
+        genericArgumentFromClass.setAccessible(true);
+        Method classFromType = SearchPath.class.getDeclaredMethod("classFromType", Type.class);
+        classFromType.setAccessible(true);
+        Method rawClass = SearchPath.class.getDeclaredMethod("rawClass", Type.class);
+        rawClass.setAccessible(true);
+
+        assertEquals(String.class, collectionElementType.invoke(null, Object.class, genericArray(String.class)));
+        assertNull(collectionElementType.invoke(null, String.class, String.class));
+        assertEquals(Line.class, genericArgumentFromType.invoke(null, parameterized(LineBag.class), Iterable.class, 0));
+        assertNull(genericArgumentFromType.invoke(null, parameterized(new UnknownType()), Iterable.class, 0));
+        assertNull(genericArgumentFromType.invoke(null, parameterized(String.class), Iterable.class, 0));
+        assertNull(genericArgumentFromClass.invoke(null, null, Iterable.class, 0));
+        assertNull(genericArgumentFromClass.invoke(null, Object.class, Iterable.class, 0));
+        assertEquals(String[].class, classFromType.invoke(null, genericArray(String.class)));
+        assertNull(classFromType.invoke(null, wildcardWithoutUpperBounds()));
+        assertNull(classFromType.invoke(null, GenericRoot.class.getTypeParameters()[0]));
+        assertNull(classFromType.invoke(null, new UnknownType()));
+        assertEquals(List.class, rawClass.invoke(null, parameterized(List.class, String.class)));
+    }
+
     private static void assertCollectionPath(String path) {
         SearchPath.Metadata metadata = SearchPath.metadata(CollectionRoot.class, "sku", path, String.class, DEEP_PATHS);
 
@@ -164,6 +222,50 @@ class SearchPathTest {
 
         assertEquals(joinedPaths, topology.joinedPaths());
         assertEquals(toManyPaths, topology.toManyPaths());
+    }
+
+    private static GenericArrayType genericArray(Type componentType) {
+        return () -> componentType;
+    }
+
+    private static ParameterizedType parameterized(Class<?> rawType, Type... arguments) {
+        return parameterized((Type) rawType, arguments);
+    }
+
+    private static ParameterizedType parameterized(Type rawType, Type... arguments) {
+        return new ParameterizedType() {
+            @Override
+            public Type[] getActualTypeArguments() {
+                return arguments;
+            }
+
+            @Override
+            public Type getRawType() {
+                return rawType;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+        };
+    }
+
+    private static WildcardType wildcardWithoutUpperBounds() {
+        return new WildcardType() {
+            @Override
+            public Type[] getUpperBounds() {
+                return new Type[0];
+            }
+
+            @Override
+            public Type[] getLowerBounds() {
+                return new Type[0];
+            }
+        };
+    }
+
+    private static final class UnknownType implements Type {
     }
 
     private static final class FieldOnlyRoot {
@@ -183,6 +285,28 @@ class SearchPathTest {
 
         public void setWriteOnly(WriteOnly writeOnly) {
             this.writeOnly = writeOnly;
+        }
+    }
+
+    private static final class IndexedOnlyRoot {
+        private String[] values = new String[0];
+
+        public String getValues(int index) {
+            return values[index];
+        }
+
+        public void setValues(int index, String value) {
+            values[index] = value;
+        }
+    }
+
+    private static final class IndexedOnlyNoFieldRoot {
+        public String getValues(int index) {
+            return "value-" + index;
+        }
+
+        public void setValues(int index, String value) {
+            // Indexed-only property for BeanUtils descriptor coverage.
         }
     }
 
@@ -224,6 +348,10 @@ class SearchPathTest {
         }
 
         public List<T[]> getArrayLines() {
+            return List.of();
+        }
+
+        public List<Line[]> getLineArrays() {
             return List.of();
         }
     }
@@ -282,6 +410,9 @@ class SearchPathTest {
         @ElementCollection
         private List<String> labels;
 
+        @ElementCollection
+        private String scalarLabel;
+
         public Line getBuyer() {
             return buyer;
         }
@@ -305,6 +436,10 @@ class SearchPathTest {
 
         public List<String> getLabels() {
             return labels;
+        }
+
+        public String getScalarLabel() {
+            return scalarLabel;
         }
     }
 }

@@ -9,10 +9,13 @@ import io.github.ggomarighetti.searchhelper.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.searchhelper.rsql.backend.perplexhub.PerplexhubRsqlBackendAdapter;
 import io.github.ggomarighetti.searchhelper.rsql.backend.perplexhub.PerplexhubRsqlBackendOptions;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
+import io.github.ggomarighetti.searchhelper.rsql.operator.DefaultRsqlOperatorDescriptors;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorDescriptor;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.data.jpa.domain.Specification;
 import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +50,8 @@ class RsqlEngineCoverageTest {
 
         assertEquals(2, ast.comparisons().size());
         assertEquals(EQUAL, ast.comparisons().get(0).operator());
+        assertTrue(DefaultRsqlOperatorDescriptors.isDefault(EQUAL));
+        assertFalse(DefaultRsqlOperatorDescriptors.isDefault(CUSTOM));
     }
 
     @Test
@@ -88,6 +93,21 @@ class RsqlEngineCoverageTest {
                 () -> engine.validate(definition));
 
         assertEquals(SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH, exception.code());
+    }
+
+    @Test
+    void validateAllowsStringArgumentTypesWithoutRegisteredStringConverter() {
+        SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, String.class);
+        SearchRsqlEngine engine = SearchRsqlEngine.builder()
+                .operator(RsqlOperatorDescriptor.builder(CUSTOM)
+                        .symbol("=custom=")
+                        .argumentType(String.class)
+                        .build())
+                .backend(new NoOpBackend())
+                .conversionService(new NoStringConversionService())
+                .build();
+
+        engine.validate(definition);
     }
 
     @Test
@@ -137,6 +157,28 @@ class RsqlEngineCoverageTest {
         @Override
         public <T> Specification<T> compile(RsqlCompilationRequest<T> request) {
             return (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+        }
+    }
+
+    private static final class NoStringConversionService implements ConversionService {
+        @Override
+        public boolean canConvert(Class<?> sourceType, Class<?> targetType) {
+            return false;
+        }
+
+        @Override
+        public boolean canConvert(TypeDescriptor sourceType, TypeDescriptor targetType) {
+            return false;
+        }
+
+        @Override
+        public <T> T convert(Object source, Class<T> targetType) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+            throw new UnsupportedOperationException();
         }
     }
 }

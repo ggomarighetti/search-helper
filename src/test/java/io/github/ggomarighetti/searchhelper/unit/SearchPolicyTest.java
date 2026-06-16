@@ -22,6 +22,21 @@ class SearchPolicyTest {
     }
 
     @Test
+    void standaloneNestedBuildersRecordSetterOverrides() {
+        assertEquals(7, SearchPolicy.Filter.builder().maxComparisons(7).build().maxComparisons());
+        assertEquals(
+                8,
+                SearchPolicy.Filter.Like.builder().maxPatternLength(8).build().maxPatternLength());
+        assertEquals(
+                2,
+                SearchPolicy.Paging.Page.builder().maxToManyPaths(2).build().maxToManyPaths());
+        assertEquals(
+                9,
+                SearchPolicy.Paging.Slice.builder().maxSize(9).build().maxSize());
+        assertEquals(4, SearchPolicy.Paths.builder().maxDepth(4).build().maxDepth());
+    }
+
+    @Test
     void rejectsInvalidNumericLimits() {
         assertThrows(
                 IllegalArgumentException.class,

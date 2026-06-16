@@ -225,6 +225,18 @@ class SearchPageableGuardTest {
     @Test
     void rejectsPageableSafetyLimitsBeforeHibernateRules() {
         SearchDefinition<TestTypes.Product> definition = definition();
+        SearchPolicy minPolicy = SearchPolicy.builder()
+                .paging(paging -> paging.minPage(1).minSize(2))
+                .build();
+        SearchDefinition<TestTypes.Product> minDefinition = definition(minPolicy);
+        PageRequest tooSmallPage = PageRequest.of(0, 2);
+        SearchPageableValidationException minPageException = assertThrows(
+                SearchPageableValidationException.class,
+                () -> guard.pageable(tooSmallPage, minDefinition));
+        PageRequest tooSmallSize = PageRequest.of(1, 1);
+        SearchPageableValidationException minSizeException = assertThrows(
+                SearchPageableValidationException.class,
+                () -> guard.pageable(tooSmallSize, minDefinition));
         PageRequest invalidPage = PageRequest.of(101, 1);
         SearchPageableValidationException pageException = assertThrows(
                 SearchPageableValidationException.class,
@@ -242,6 +254,8 @@ class SearchPageableGuardTest {
                 SearchPageableValidationException.class,
                 () -> guard.pageable(offsetPage, offsetDefinition));
 
+        assertValidationCode(minPageException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
+        assertValidationCode(minSizeException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
         assertValidationCode(pageException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
         assertValidationCode(sizeException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
         assertValidationCode(offsetException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
