@@ -233,11 +233,14 @@ class SearchPageableGuardTest {
         SearchPageableValidationException sizeException = assertThrows(
                 SearchPageableValidationException.class,
                 () -> guard.pageable(invalidSize, definition));
+        SearchPolicy offsetPolicy = SearchPolicy.builder()
+                .paging(paging -> paging.maxPage(200).maxSize(200))
+                .build();
+        SearchDefinition<TestTypes.Product> offsetDefinition = definition(offsetPolicy);
+        PageRequest offsetPage = PageRequest.of(100, 101);
         SearchPageableValidationException offsetException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(100, 101), definition(SearchPolicy.builder()
-                        .paging(paging -> paging.maxPage(200).maxSize(200))
-                        .build())));
+                () -> guard.pageable(offsetPage, offsetDefinition));
 
         assertValidationCode(pageException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
         assertValidationCode(sizeException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
