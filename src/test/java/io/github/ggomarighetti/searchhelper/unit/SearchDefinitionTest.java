@@ -392,15 +392,16 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsDuplicatedQueryDeclaration() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("email", String.class))
-                        .query(query -> query.specification(term ->
-                                (root, criteria, builder) -> builder.conjunction()))
-                        .query(SearchQuery.<TestTypes.Product>builder()
-                                .specification(term -> (root, criteria, builder) -> builder.conjunction())
-                                .build())
-                        .build());
+        SearchQuery<TestTypes.Product> query = SearchQuery.<TestTypes.Product>builder()
+                .specification(term -> (root, criteria, builder) -> builder.conjunction())
+                .build();
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class))
+                .query(definitionQuery -> definitionQuery.specification(term ->
+                        (root, criteria, criteriaBuilder) -> criteriaBuilder.conjunction()))
+                .query(query);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertEquals("query is already declared", exception.getMessage());
     }
