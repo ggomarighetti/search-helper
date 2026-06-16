@@ -415,10 +415,11 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsRsqlParenthesesNestingBeforeParsing() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .rsql(rsql -> rsql.maxParenthesesDepth(2)));
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("(((taxId==20123456789)))", filters(limits -> limits
-                        .rsql(rsql -> rsql.maxParenthesesDepth(2)))));
+                () -> guard.specification("(((taxId==20123456789)))", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.LIMIT_EXCEEDED);
     }
