@@ -75,13 +75,12 @@ class SearchPageableGuardTest {
     @Test
     void rejectsDifferentSortSelectorsThatResolveToSameInternalPath() {
         SearchDefinition<TestTypes.Product> definition = duplicateSortPathDefinition();
+        PageRequest pageRequest = PageRequest.of(0, 25,
+                Sort.by(Sort.Order.asc("legacyAmount"), Sort.Order.desc("amount")));
 
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25,
-                                Sort.by(Sort.Order.asc("legacyAmount"), Sort.Order.desc("amount"))),
-                        definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_LIMIT_EXCEEDED);
     }
