@@ -25,7 +25,7 @@ public record RuleViolation(
     public RuleViolation {
         Objects.requireNonNull(path, "path must not be null");
         Objects.requireNonNull(message, "message must not be null");
-        messageTemplate = Objects.requireNonNull(messageTemplate, "messageTemplate must not be null");
+        Objects.requireNonNull(messageTemplate, "messageTemplate must not be null");
         constraint = Objects.requireNonNull(constraint, "constraint must not be null");
     }
 
