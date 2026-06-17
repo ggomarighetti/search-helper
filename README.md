@@ -1,12 +1,12 @@
-# search-helper
+# jpa-rsql-search
 
-[![Verify](https://github.com/ggomarighetti/search-helper/actions/workflows/verify.yml/badge.svg)](https://github.com/ggomarighetti/search-helper/actions/workflows/verify.yml)
+[![Verify](https://github.com/ggomarighetti/jpa-rsql-search/actions/workflows/verify.yml/badge.svg)](https://github.com/ggomarighetti/jpa-rsql-search/actions/workflows/verify.yml)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-007396)](https://adoptium.net/)
 [![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.x-6DB33F)](https://spring.io/projects/spring-boot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: pre-release](https://img.shields.io/badge/status-pre--release-orange)](#project-status)
 
-search-helper is a small contract layer for applications that receive search
+jpa-rsql-search is a small contract layer for applications that receive search
 parameters and need to compile them into Spring Data JPA artifacts. It does
 not run the search itself. A search use case starts with a `SearchDefinition`.
 It describes the public fields a client may filter or sort by, the operators
@@ -20,7 +20,7 @@ flowchart LR
     input["filter: String<br/>query: String?<br/>pageable: Pageable"]
     repository["repository.findAll(...)<br/><small>extends JpaSpecificationExecutor&lt;T&gt;</small>"]
 
-    subgraph helper["search-helper"]
+    subgraph helper["jpa-rsql-search"]
         direction LR
         contract["SearchCompiler<br/><small>requires SearchDefinition&lt;T&gt;</small>"]
         compiled["CompiledSearch&lt;T&gt;<br/><small>returns Specification&lt;T&gt; + Pageable</small>"]
@@ -35,7 +35,7 @@ flowchart LR
 `SearchCompiler` validates the request against the `SearchDefinition` and the
 configured protection policy. If the request is valid, the configured RSQL
 backend translates the filter into a JPA
-`Specification`; search-helper then returns that `Specification` together with
+`Specification`; jpa-rsql-search then returns that `Specification` together with
 a validated `Pageable` as a `CompiledSearch<T>`. Your application decides when
 to execute it by calling `repository.findAll(...)` on a repository that extends
 `JpaSpecificationExecutor<T>`.
@@ -49,7 +49,7 @@ predicates, and protection limits in one declared model, so each request can be
 validated and customized before your repository receives the resulting
 `Specification` and `Pageable`.
 
-> Under the hood, `search-helper` builds on
+> Under the hood, `jpa-rsql-search` builds on
 > [perplexhub/rsql-jpa-specification](https://github.com/perplexhub/rsql-jpa-specification)
 > for the RSQL-to-JPA `Specification` translation. It also uses
 > [nstdio/rsql-parser](https://github.com/nstdio/rsql-parser), a fork of
@@ -227,7 +227,7 @@ CompiledSearch<Product> compiled = searchCompiler.compile(
 
 Your application can implement free-text search with PostgreSQL full-text
 search, database functions, normalized columns, or ordinary Criteria API
-predicates. `search-helper` does not force a search strategy.
+predicates. `jpa-rsql-search` does not force a search strategy.
 
 ## Aliases, Relations, and Inheritance
 
@@ -417,12 +417,12 @@ The everyday API is intentionally small, but the RSQL layer remains extensible:
 
 The default backend is implemented with
 [Perplexhub rsql-jpa](https://github.com/perplexhub/rsql-jpa-specification).
-`search-helper` deliberately builds on that work instead of replacing its
+`jpa-rsql-search` deliberately builds on that work instead of replacing its
 RSQL-to-JPA translation.
 
 ## Project Status
 
-`search-helper` is currently a pre-release project:
+`jpa-rsql-search` is currently a pre-release project:
 
 - current version: `0.1.0-SNAPSHOT`;
 - no Maven Central release has been published yet;
