@@ -21,7 +21,7 @@
     <expressly.version>6.0.0</expressly.version>
     <jacoco.version>0.8.15</jacoco.version>
     <sonar.maven.plugin.version>5.7.0.6970</sonar.maven.plugin.version>
-    <sonar.projectKey>ggomarighetti_search-helper</sonar.projectKey>
+    <sonar.projectKey>ggomarighetti_jpa-rsql-search</sonar.projectKey>
     <sonar.projectName>jpa-rsql-search</sonar.projectName>
     <sonar.organization>ggomarighetti</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
