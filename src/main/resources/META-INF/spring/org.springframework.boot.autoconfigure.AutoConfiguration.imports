@@ -1,2 +1,2 @@
-io.github.ggomarighetti.searchhelper.autoconfigure.SearchRsqlAutoConfiguration
-io.github.ggomarighetti.searchhelper.autoconfigure.SearchHelperAutoConfiguration
+io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchRsqlAutoConfiguration
+io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchAutoConfiguration

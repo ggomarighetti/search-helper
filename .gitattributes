@@ -1,5 +1,6 @@
 # Normalize line endings to LF on check-in for text files
 * text=auto
+.gitattributes text eol=lf
 
 # Source code
 *.java text eol=lf
@@ -7,6 +8,7 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 *.properties text eol=lf
+*.imports text eol=lf
 *.md text eol=lf
 
 # Scripts
