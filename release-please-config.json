@@ -1,0 +1,36 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "maven",
+      "package-name": "jpa-rsql-search",
+      "component": "jpa-rsql-search",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "skip-github-release": true,
+      "pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation"
+        },
+        {
+          "type": "deps",
+          "section": "Dependencies"
+        }
+      ]
+    }
+  }
+}

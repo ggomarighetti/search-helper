@@ -1,0 +1,30 @@
+name: Conventional PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?(!)?: .+'
+          if [[ ! "${PR_TITLE}" =~ ${pattern} ]]; then
+            echo "::error::PR title must follow Conventional Commits, for example: feat: add operator support"
+            exit 1
+          fi
