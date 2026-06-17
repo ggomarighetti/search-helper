@@ -6,14 +6,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: pre-release](https://img.shields.io/badge/status-pre--release-orange)](#project-status)
 
-jpa-rsql-search is a small contract layer for applications that receive search
-parameters and need to compile them into Spring Data JPA artifacts. It does
-not run the search itself. A search use case starts with a `SearchDefinition`.
-It describes the public fields a client may filter or sort by, the operators
-and value conversions allowed for each field, the paging and optional
-application-defined query rules, and the limits that keep requests bounded. At
-runtime, your application passes that definition, the incoming RSQL filter,
-optional query parameter, and `Pageable` to `SearchCompiler`.
+`jpa-rsql-search` is a small contract layer for Spring applications that accept
+dynamic search input and need to turn it into Spring Data JPA artifacts. It does
+not run the query itself. Your application declares a `SearchDefinition<T>` for
+one search use case, passes the incoming RSQL filter, optional query text,
+and `Pageable` to `SearchCompiler`, and receives a validated
+`CompiledSearch<T>` containing a `Specification<T>` and a safe `Pageable`.
 
 ```mermaid
 flowchart LR
@@ -32,43 +30,64 @@ flowchart LR
     compiled --> repository
 ```
 
-`SearchCompiler` validates the request against the `SearchDefinition` and the
-configured protection policy. If the request is valid, the configured RSQL
-backend translates the filter into a JPA
-`Specification`; jpa-rsql-search then returns that `Specification` together with
-a validated `Pageable` as a `CompiledSearch<T>`. Your application decides when
-to execute it by calling `repository.findAll(...)` on a repository that extends
-`JpaSpecificationExecutor<T>`.
+The definition is the application-owned boundary: public field names, entity
+paths, allowed operators, value conversion and validation rules, paging,
+sorting, optional query behavior, mandatory predicates, and protection
+limits live in one declared model. Each request is validated against that model
+before a repository sees the generated `Specification` and `Pageable`.
 
-This lets a search API grow from simple filters to richer use cases without
-losing the dynamic shape that makes RSQL useful, and without making endpoint
-code grow around every new parameter, operator, sort option, join, or query
-rule. The contract keeps public field names, entity paths, operator support,
-value conversion, paging, sorting, optional query behavior, mandatory
-predicates, and protection limits in one declared model, so each request can be
-validated and customized before your repository receives the resulting
-`Specification` and `Pageable`.
+That lets a search API grow from a handful of filters to richer query use cases
+without adding endpoint-specific parameters for every field, join, operator, or
+sort order. Clients keep the flexible shape that makes RSQL useful, while the
+server keeps a narrow and explicit contract around what can actually be queried.
 
-> Under the hood, `jpa-rsql-search` builds on
-> [perplexhub/rsql-jpa-specification](https://github.com/perplexhub/rsql-jpa-specification)
-> for the RSQL-to-JPA `Specification` translation. It also uses
-> [nstdio/rsql-parser](https://github.com/nstdio/rsql-parser), a fork of
-> [jirutka/rsql-parser](https://github.com/jirutka/rsql-parser), the original
-> RSQL parser project. This library adds an application contract, validation,
-> and protection layer around those foundations.
+## What is RSQL?
 
-[Example](#example) |
-[About RSQL](#about-rsql) |
-[Field Capabilities](#field-capabilities) |
-[Protection Policy](#protection-policy) |
-[Errors](#errors) |
-[Extension Points](#extension-points)
+RSQL is a compact URL filter syntax for expressing comparisons and boolean
+logic. It is useful when an endpoint needs dynamic filtering but should not grow
+a new query parameter for every possible field/operator pair.
 
-## Example
+```text
+name=ilike=phone;price=ge=500
+status=in=(ACTIVE,DRAFT)
+(brand==Acme,brand==Omni);deleted==false
+```
 
-The whole flow is a regular repository plus an application-owned search use case.
+In RSQL, `;` means logical `AND`, `,` means logical `OR`, selectors identify
+public fields, and comparison operators such as `==`, `=in=`, `=ge=`, or
+`=ilike=` describe the filter operation. This project uses
+[nstdio/rsql-parser](https://github.com/nstdio/rsql-parser), a maintained fork
+of the original [jirutka/rsql-parser](https://github.com/jirutka/rsql-parser).
 
-### Repository
+## Why not use rsql-jpa-specification directly?
+
+You can, and this library deliberately builds on
+[perplexhub/rsql-jpa-specification](https://github.com/perplexhub/rsql-jpa-specification)
+for the RSQL-to-JPA `Specification` translation.
+
+`jpa-rsql-search` adds the application contract around that translation. It
+lets you expose stable public aliases instead of entity paths, decide which
+fields can be filtered or sorted, restrict operators and sort directions per
+field, convert and validate values with Spring and Hibernate Validator, attach
+mandatory application-owned `Specification<T>` predicates, enforce bounded
+parser/filter/paging/sorting/query/path policies, and return structured
+validation details that fit naturally into API error DTOs. In other words,
+Perplexhub handles the low-level RSQL-to-JPA work; this library handles the
+public search contract around it.
+
+## Contents
+
+[Quick Example](#quick-example) |
+[API Reference](#api-reference) |
+[Configuration](#configuration) |
+[Error Handling](#error-handling) |
+[Customization](#customization) |
+[Project Status](#project-status)
+
+## Quick Example
+
+The runtime flow is a regular Spring Data repository plus an application-owned
+search definition.
 
 ```java
 public interface ProductRepository
@@ -76,8 +95,6 @@ public interface ProductRepository
                 JpaSpecificationExecutor<Product> {
 }
 ```
-
-### Application Use Case
 
 ```java
 @Service
@@ -126,44 +143,118 @@ public class ProductSearchUseCase {
 }
 ```
 
-## About RSQL
+## API Reference
 
-RSQL is the URL filter syntax used by the library. It is documented by the
-[original RSQL parser project](https://github.com/jirutka/rsql-parser), and this
-project currently uses the maintained
-[nstdio parser fork](https://github.com/nstdio/rsql-parser). JPA predicate
-generation is delegated to
-[Perplexhub rsql-jpa](https://github.com/perplexhub/rsql-jpa-specification).
+### Main Types
 
-```text
-name=ilike=phone;price=ge=500
-status=in=(ACTIVE,DRAFT)
-```
+| Type | Purpose |
+|---|---|
+| `SearchDefinition<T>` | Immutable contract for one entity and search use case |
+| `SearchDefinitionFactory` | Creates definitions with application-wide path limits |
+| `SearchCompiler` | Validates and compiles a complete request |
+| `CompiledSearch<T>` | Resulting `Specification<T>` and validated `Pageable` |
+| `SearchPolicy` | Global and definition-local protection limits |
+| `RsqlOperators` | Logical identifiers for built-in operators |
 
-## Field Capabilities
+### SearchDefinition Builder
 
-Every declared field starts with filtering and sorting disabled.
-
-```java
-fields.add("name", String.class);       // exposed metadata only
-fields.add("name", String.class).filterable();
-fields.add("name", String.class).sortable();
-fields.add("name", String.class).searchable();
-```
-
-- `filterable()` enables the restrictive default operator profile for the Java type.
-- `sortable()` allows ascending and descending sorting.
-- `searchable()` combines `filterable()` and `sortable()`.
-- `filterable(customizer)` starts with an empty whitelist unless
-  `withDefaults()` is called.
+Start every definition by selecting the JPA root entity:
 
 ```java
-fields.add("name", String.class)
+SearchDefinition<Product> definition = SearchDefinition.builder()
+        .entity(Product.class)
+        .build();
+```
+
+In Spring Boot applications, prefer the auto-configured
+`SearchDefinitionFactory` when definitions should inherit global path-depth
+policy during construction:
+
+```java
+SearchDefinition<Product> definition = searchDefinitionFactory.builder()
+        .entity(Product.class)
+        .fields(fields -> fields.add("country", String.class)
+                .path("supplier.address.countryCode")
+                .filterable())
+        .paging()
+        .build();
+```
+
+Declare public fields inside `.fields(...)`. A field starts as metadata only;
+filtering and sorting are disabled until enabled explicitly.
+
+```java
+SearchDefinition<Product> definition = SearchDefinition.builder()
+        .entity(Product.class)
+        .fields(fields -> {
+            fields.add("name", String.class);       // exposed metadata only
+            fields.add("sku", String.class).filterable();
+            fields.add("price", BigDecimal.class).sortable();
+            fields.add("category", String.class).searchable();
+        })
+        .build();
+```
+
+`fields.add(selector, type)` declares the stable public selector and the value
+type used for conversion and validation. The selector is also the default entity
+path. Use `.path(...)` to map a public selector to a different JPA path.
+
+```java
+fields.add("customerName", String.class)
+        .path("customer.name")
+        .filterable()
+        .sortable();
+```
+
+Filtering and sorting can use separate paths when the read model needs it:
+
+```java
+fields.add("customer", String.class)
+        .filterable(filter -> filter
+                .path("customer.name")
+                .allow(EQUAL, IGNORE_CASE_LIKE))
+        .sortable(sort -> sort
+                .path("customer.sortName")
+                .allow(ASC));
+```
+
+Subtype-only fields are supported through JPA `treat` by declaring
+`.subtype(...)`:
+
+```java
+fields.add("birthDate", LocalDate.class)
+        .subtype(NaturalPerson.class)
+        .filterable()
+        .sortable();
+```
+
+Definition paths are checked against Java properties while the DSL is built and,
+in JPA applications, against the JPA metamodel when first compiled.
+
+### Filtering
+
+`.filterable()` enables the restrictive default operator profile for the field
+type. `.filterable(filter -> ...)` starts with an empty whitelist unless
+`filter.withDefaults()` is called.
+
+```java
+fields.add("price", BigDecimal.class)
         .filterable(filter -> filter
                 .withDefaults()
                 .deny(IN)
                 .allow(IS_NULL));
 ```
+
+The filtering DSL supports:
+
+| Method | Effect |
+|---|---|
+| `filter.path(...)` | Overrides the filtering JPA path |
+| `filter.withDefaults()` | Adds the type-aware default operator profile |
+| `filter.allow(operator...)` | Allows one or more operators without extra rules |
+| `filter.allow(operator, rules -> ...)` | Allows an operator and adds validation |
+| `filter.allow(operator, argumentType, rules -> ...)` | Uses an explicit conversion/validation type |
+| `filter.deny(operator...)` | Removes operators from the effective whitelist |
 
 Default operator profiles are type-aware:
 
@@ -177,10 +268,18 @@ Default operator profiles are type-aware:
 Null operators are never included by default. Opt into `IS_NULL` or `NOT_NULL`
 only where nullability is part of the public API.
 
-## Validate Filter Values
+Built-in logical operators are available through `RsqlOperators`:
 
-Allowed operators can validate each converted value or the complete argument
-list with programmatic Hibernate Validator constraints:
+```java
+EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL,
+LESS_THAN, LESS_THAN_OR_EQUAL, IN, NOT_IN,
+IS_NULL, NOT_NULL, LIKE, NOT_LIKE, IGNORE_CASE,
+IGNORE_CASE_LIKE, IGNORE_CASE_NOT_LIKE, BETWEEN, NOT_BETWEEN
+```
+
+Operator declarations can validate each converted argument with `each(...)` and
+the complete converted argument list with `args(...)`. Rules are declared with
+Hibernate Validator's programmatic constraint definitions.
 
 ```java
 fields.add("taxId", String.class)
@@ -196,54 +295,9 @@ fields.add("taxId", String.class)
                                 .rule(new PatternDef().regexp("\\d+")))));
 ```
 
-Values are converted to the field type before validation. Invalid UUIDs, enums,
-numbers, dates, and custom converted values become structured RSQL validation
-errors instead of persistence failures.
-
-## Free-Text Query
-
-RSQL filtering and free-text search are separate concerns. The library validates
-the query text and delegates its persistence semantics to your own
-`Specification` factory:
-
-```java
-private static final SearchDefinition<Product> PRODUCT_DEFINITION =
-        SearchDefinition.builder()
-                .entity(Product.class)
-                .query(query -> query
-                        .rule(new SizeDef().min(3).max(80))
-                        .specification(ProductSpecifications::matchesTerm))
-                .paging()
-                .build();
-```
-
-```java
-CompiledSearch<Product> compiled = searchCompiler.compile(
-        filter,
-        query,
-        pageable,
-        PRODUCT_DEFINITION);
-```
-
-Your application can implement free-text search with PostgreSQL full-text
-search, database functions, normalized columns, or ordinary Criteria API
-predicates. `jpa-rsql-search` does not force a search strategy.
-
-## Aliases, Relations, and Inheritance
-
-Expose stable API names without leaking entity structure:
-
-```java
-fields.add("customerName", String.class)
-        .filterable(filter -> filter
-                .path("customer.name")
-                .allow(EQUAL))
-        .sortable(sort -> sort
-                .path("customer.sortName"));
-```
-
-A shared `.path(...)` can be used when filtering and sorting target the same
-attribute.
+Values are converted before validation. Invalid UUIDs, enums, numbers, dates,
+or custom converted values become structured RSQL validation errors instead of
+persistence failures.
 
 Collection-valued filter paths are detected automatically:
 
@@ -253,93 +307,96 @@ fields.add("reviewRating", Integer.class)
         .filterable(filter -> filter.allow(GREATER_THAN_OR_EQUAL));
 ```
 
-When such a selector is present in the filter, the generated query uses
+When a to-many selector appears in the filter, the generated query uses
 `distinct(true)` to prevent duplicate root rows. Sorting through collection
 paths is rejected.
 
-Subtype-only fields are supported through JPA `treat`:
+### Sorting
+
+`.sortable()` enables both `ASC` and `DESC` directions on the effective path.
+`.sortable(sort -> ...)` customizes the sort contract.
 
 ```java
-fields.add("birthDate", LocalDate.class)
-        .subtype(NaturalPerson.class)
+fields.add("name", String.class)
+        .sortable(sort -> sort
+                .allow(ASC)
+                .allowIgnoreCase()
+                .allowNullHandling(NULLS_LAST));
+```
+
+The sorting DSL supports:
+
+| Method | Effect |
+|---|---|
+| `sort.path(...)` | Overrides the sorting JPA path |
+| `sort.allow(...)` | Restricts accepted `Sort.Direction` values |
+| `sort.allowIgnoreCase()` | Allows Spring Data case-insensitive sort orders |
+| `sort.allowNullHandling(...)` | Allows explicit Spring Data null handling modes |
+
+Global sorting policy can still reject relation sorting, too many orders,
+case-insensitive orders, explicit null handling, or to-many paths.
+
+### Searchable Fields
+
+`.searchable()` is a convenience method that enables default filtering and both
+sort directions:
+
+```java
+fields.add("name", String.class).searchable();
+```
+
+It is equivalent to:
+
+```java
+fields.add("name", String.class)
         .filterable()
         .sortable();
 ```
 
-Definition paths are checked against Java properties while the DSL is built and
-against the JPA metamodel when first compiled in a JPA application.
+### Query Text
 
-## Keep Business Rules Outside Client RSQL
-
-Tenant isolation, authorization, visibility, and other mandatory predicates
-should remain application-owned specifications:
+RSQL filtering and the optional `query` parameter are separate concerns. The
+library validates query text and delegates persistence semantics to your own
+`Specification<T>` factory.
 
 ```java
-CompiledSearch<Product> compiled = searchCompiler.compile(
-        filter,
-        query,
-        pageable,
-        PRODUCT_DEFINITION,
-        belongsToTenant(tenantId),
-        visibleTo(currentUser),
-        notDeleted());
+SearchDefinition<Product> definition = SearchDefinition.builder()
+        .entity(Product.class)
+        .query(query -> query
+                .rule(new SizeDef().min(3).max(80))
+                .specification(ProductSpecifications::matchesTerm))
+        .paging()
+        .build();
 ```
 
-All supplied specifications are combined with the validated RSQL and free-text
-specifications using logical `AND`. Clients cannot remove or override them.
+Your application can implement query matching with database functions,
+normalized columns, indexed expressions, or ordinary Criteria API predicates.
+`jpa-rsql-search` does not force a search strategy.
 
-## Protection Policy
+### Paging
 
-The library ships with bounded defaults. Override only the limits appropriate
-for your data model and traffic:
-
-```yaml
-search:
-  helper:
-    rsql:
-      max-length: 1000
-      max-parentheses-depth: 6
-      max-nodes: 40
-      max-depth: 6
-    filter:
-      max-comparisons: 12
-      max-comparisons-per-selector: 4
-      max-arguments-total: 40
-      max-argument-length: 120
-      max-in-values: 20
-      max-or-branches: 8
-      max-joined-paths: 3
-      max-to-many-paths: 1
-    paging:
-      max-page: 100
-      max-size: 50
-      max-offset: 2500
-      allow-unpaged: false
-    sorting:
-      max-orders: 3
-      max-relation-orders: 1
-    query:
-      max-length: 100
-    paths:
-      max-depth: 3
-```
-
-Protection covers:
-
-- raw RSQL length and parenthesis nesting;
-- AST nodes, depth, and logical children;
-- comparisons per request and per selector;
-- argument count, total count, and length;
-- `IN`, `NOT IN`, range, negation, wildcard, and OR complexity;
-- joined and to-many paths;
-- page, size, offset, unpaged requests, and count-query topology;
-- sort count, relation sorts, case handling, and null handling;
-- risky combinations of query, relation sorting, to-many filtering, and unpaged requests.
-
-Endpoint-specific limits can partially overlay the global policy:
+`.paging()` enables paging with definition-level default rules. `.paging(...)`
+adds Hibernate Validator rules for page number and page size.
 
 ```java
-SearchDefinition.builder()
+SearchDefinition<Product> definition = SearchDefinition.builder()
+        .entity(Product.class)
+        .paging(paging -> paging
+                .page(page -> page.rule(new MinDef().value(0)))
+                .size(size -> size.rule(new MaxDef().value(50))))
+        .build();
+```
+
+Definition rules are applied in addition to global paging policy.
+
+### Local Policy Overrides
+
+`.limits(...)` customizes the protection policy for one definition. Customizer
+based limits overlay only the values explicitly changed on top of the compiler's
+global policy.
+
+```java
+SearchDefinition<Product> definition = SearchDefinition.builder()
         .entity(Product.class)
         .limits(limits -> limits
                 .filter(filter -> filter
@@ -351,74 +408,347 @@ SearchDefinition.builder()
         .build();
 ```
 
-Customizer-based limits replace only the values explicitly changed. Passing a
-complete `SearchPolicy` replaces the global policy for that definition.
+Passing a complete `SearchPolicy` to `.limits(SearchPolicy)` replaces the global
+policy for that definition.
 
-Use the auto-configured `SearchDefinitionFactory` when definitions must inherit
-the global path-depth policy during construction:
+### Runtime Compilation
+
+Use `SearchCompiler` for complete request compilation. It coordinates filtering,
+query text, paging, sorting, and cross-component protection rules.
 
 ```java
-SearchDefinition<Product> definition = searchDefinitionFactory.builder()
+CompiledSearch<Product> search = searchCompiler.compile(
+        filter,
+        query,
+        pageable,
+        PRODUCT_DEFINITION);
+
+return productRepository.findAll(search.specification(), search.pageable());
+```
+
+Repositories must extend `JpaSpecificationExecutor<T>` to execute the compiled
+`Specification<T>`.
+
+For count-free flows, use `compileSlice(...)`. It applies slice-specific
+protection instead of page count-query restrictions.
+
+```java
+CompiledSearch<Product> search = searchCompiler.compileSlice(
+        filter,
+        query,
+        pageable,
+        PRODUCT_DEFINITION);
+
+return productSliceQuery.fetchSlice(search.specification(), search.pageable());
+```
+
+The execution method is application-owned; use a repository/query path that
+actually returns a slice without issuing a count query.
+
+Tenant isolation, authorization, visibility, and other mandatory predicates
+should remain application-owned specifications. Extra specifications passed to
+`compile(...)` or `compileSlice(...)` are combined with the validated RSQL and
+query specifications using logical `AND`.
+
+```java
+CompiledSearch<Product> search = searchCompiler.compile(
+        filter,
+        query,
+        pageable,
+        PRODUCT_DEFINITION,
+        belongsToTenant(tenantId),
+        visibleTo(currentUser),
+        notDeleted());
+```
+
+Clients cannot remove or override those mandatory predicates.
+
+## Configuration
+
+Spring Boot auto-configuration binds global limits from the
+`jpa.rsql.search` prefix and turns them into a `SearchPolicy`. Most
+applications only override the few limits that should be tighter for their data
+model or traffic profile:
+
+```yaml
+jpa:
+  rsql:
+    search:
+      filter:
+        max-comparisons: 16
+        max-in-values: 25
+      paging:
+        max-size: 50
+        max-offset: 2500
+      query:
+        max-length: 100
+```
+
+The generated JAR includes Spring Boot configuration metadata for the complete
+property set. At a high level, the policy groups are:
+
+| Group | Covers |
+|---|---|
+| `rsql` | Parser enablement, raw filter length, parenthesis depth, AST size and depth |
+| `rsql.perplexhub` | Options for the bundled Perplexhub-backed JPA compiler |
+| `filter` | Comparison counts, arguments, `IN`, `NOT IN`, ranges, negation, OR complexity, joins, and to-many filtering |
+| `filter.like` | LIKE pattern length, literal length, wildcard placement/count, and case-insensitive LIKE support |
+| `paging` | Page number, size, offset, unpaged requests, and page/slice topology |
+| `sorting` | Sort order count, relation sorting, case handling, null handling, joins, and to-many rejection |
+| `query` | Query text length and risky combinations with to-many filtering, relation sorting, or unpaged requests |
+| `paths` | Maximum dotted path depth used while building definitions |
+
+The built-in profile is intentionally bounded: RSQL is enabled with a
+4096-character maximum, AST depth is capped at 8 with at most 48 nodes, filters
+allow up to 24 comparisons and 50 `IN` values, page size defaults to a maximum
+of 100 with a 5000-row offset cap, unpaged requests are disabled, sort orders
+are capped at 3, to-many sorting is rejected, slice compilation is enabled, and
+definition paths are capped at 3 segments.
+
+Per-use case `.limits(...)` overlays remain useful when one endpoint needs a
+tighter profile than the global defaults:
+
+```java
+SearchDefinition<Product> definition = SearchDefinition.builder()
         .entity(Product.class)
-        .fields(fields -> fields.add("country", String.class)
-                .path("supplier.address.countryCode")
-                .filterable())
+        .limits(limits -> limits
+                .filter(filter -> filter.maxComparisons(8))
+                .paging(paging -> paging.maxSize(25)))
         .paging()
         .build();
 ```
 
-## Errors
+## Error Handling
 
-Validation failures expose stable codes and safe details suitable for an API
-error mapper:
+Request validation failures expose stable codes and safe details suitable for
+API error DTOs.
 
-| Exception | Common codes |
-|---|---|
-| `RsqlFilterValidationException` | `RSQL_PARSE_ERROR`, `RSQL_RULES_FORBIDDEN`, `RSQL_LIMIT_EXCEEDED` |
-| `SearchPageableValidationException` | `PAGE_RULES_FORBIDDEN`, `PAGE_LIMIT_EXCEEDED`, `SORT_RULES_FORBIDDEN`, `SORT_LIMIT_EXCEEDED` |
-| `SearchQueryValidationException` | `QUERY_RULES_FORBIDDEN` |
-| `SearchProtectionException` | `SEARCH_PROTECTION_RULE_EXCEEDED` |
-| `SearchDefinitionValidationException` | `PATH_LIMIT_EXCEEDED`, `JPA_PATH_UNRESOLVED`, and RSQL configuration codes |
+| Exception | Common codes | Details |
+|---|---|---|
+| `RsqlFilterValidationException` | `RSQL_PARSE_ERROR`, `RSQL_RULES_FORBIDDEN`, `RSQL_LIMIT_EXCEEDED` | `errors()` returns `RsqlValidationError` values |
+| `SearchPageableValidationException` | `PAGE_RULES_FORBIDDEN`, `PAGE_LIMIT_EXCEEDED`, `SORT_RULES_FORBIDDEN`, `SORT_LIMIT_EXCEEDED` | `violations()` returns `RuleViolation` values for page/size rules |
+| `SearchQueryValidationException` | `QUERY_RULES_FORBIDDEN` | `violations()` returns `RuleViolation` values for query rules |
+| `SearchProtectionException` | `SEARCH_PROTECTION_RULE_EXCEEDED` | `rule()`, `actual()`, and `limit()` identify the exceeded protection rule |
+| `SearchDefinitionValidationException` | `PATH_LIMIT_EXCEEDED`, `JPA_PATH_UNRESOLVED`, `RSQL_CONFIGURATION_INVALID`, `RSQL_OPERATOR_NOT_REGISTERED`, `RSQL_OPERATOR_NOT_EXECUTABLE`, `RSQL_OPERATOR_TYPE_MISMATCH`, `DEFAULT_OPERATORS_UNSUPPORTED_TYPE` | Configuration failure; usually not a client `400` |
 
-RSQL errors can identify the selector, operator, argument index, AST path, and
-failed validation constraint. Page, size, and query violations expose safe
-`RuleViolation` values.
+`RsqlValidationError` can identify the AST location, selector, operator,
+argument index, validation path, message, message template, and constraint.
+`RuleViolation` is a serializable view of a Jakarta Bean Validation violation:
+it includes path, message, template, and constraint type, but intentionally omits
+the invalid value.
+
+That makes custom rules declared with `SizeDef`, `PatternDef`, `MaxDef`, and
+other Hibernate Validator definitions behave like normal DTO validation from an
+API boundary perspective: you can transmit structured validation details to the
+client without exposing raw request values.
+
+```java
+@RestControllerAdvice
+class SearchExceptionHandler {
+
+    @ExceptionHandler(RsqlFilterValidationException.class)
+    ResponseEntity<ApiError> handleRsql(RsqlFilterValidationException exception) {
+        return ResponseEntity.badRequest().body(ApiError.validation(
+                exception.code(),
+                exception.getMessage(),
+                exception.errors()));
+    }
+
+    @ExceptionHandler(SearchPageableValidationException.class)
+    ResponseEntity<ApiError> handlePageable(
+            SearchPageableValidationException exception) {
+        return ResponseEntity.badRequest().body(ApiError.validation(
+                exception.code(),
+                exception.getMessage(),
+                exception.violations()));
+    }
+
+    @ExceptionHandler(SearchQueryValidationException.class)
+    ResponseEntity<ApiError> handleQuery(SearchQueryValidationException exception) {
+        return ResponseEntity.badRequest().body(ApiError.validation(
+                exception.code(),
+                exception.getMessage(),
+                exception.violations()));
+    }
+
+    @ExceptionHandler(SearchProtectionException.class)
+    ResponseEntity<ApiError> handleProtection(SearchProtectionException exception) {
+        return ResponseEntity.badRequest().body(ApiError.validation(
+                exception.code(),
+                exception.getMessage(),
+                Map.of(
+                        "rule", exception.rule(),
+                        "actual", exception.actual(),
+                        "limit", exception.limit())));
+    }
+}
+```
 
 Applications will normally map request validation and protection exceptions to
-HTTP `400`. Definition validation errors indicate an application configuration
-problem and should fail loudly.
+HTTP `400`. `SearchDefinitionValidationException` indicates an application
+configuration problem: unresolved entity paths, invalid custom operators,
+unsupported default operator profiles, or incompatible conversion/backend
+contracts should fail loudly during development, startup, or first use.
 
-## Main API
+## Customization
 
-| Type | Purpose |
+The everyday API is intentionally small, but the RSQL layer remains extensible.
+
+| Extension point | Use case |
 |---|---|
-| `SearchDefinition<T>` | Immutable contract for one entity and search use case |
-| `SearchCompiler` | Validates and compiles the complete request |
-| `CompiledSearch<T>` | Resulting `Specification<T>` and validated `Pageable` |
-| `SearchPolicy` | Global and local protection limits |
-| `SearchDefinitionFactory` | Creates definitions with application-wide path limits |
-| `RsqlOperators` | Logical identifiers for built-in operators |
-
-For count-free flows, `SearchCompiler.compileSlice(...)` applies slice-specific
-protection instead of page count-query restrictions.
-
-## Extension Points
-
-The everyday API is intentionally small, but the RSQL layer remains extensible:
-
-| SPI | Use case |
-|---|---|
-| `SearchRsqlEngineCustomizer` | Customize the auto-configured engine |
-| `RsqlOperatorDescriptor` | Register parser symbols, arity, conversion type, and a custom JPA predicate |
+| `SearchRsqlEngineCustomizer` | Customize the auto-configured RSQL engine |
+| `RsqlOperatorDescriptor` | Register parser symbols, arity, conversion type, and custom JPA execution |
+| `PerplexhubRsqlBackendOptions` | Tune the bundled Perplexhub adapter |
 | `RsqlBackendAdapter` | Replace the Perplexhub-backed compiler |
 | `RsqlParserFactory` | Replace parser construction |
 | `SearchDefinitionValidator` | Add runtime definition checks |
-| `ConversionService` | Add application-specific value conversion |
+| `ConversionService` / `Converter<String, T>` | Add application-specific value conversion |
+| `jpa.rsql.search.rsql.perplexhub.*` | Configure the bundled Perplexhub backend |
 
-The default backend is implemented with
-[Perplexhub rsql-jpa](https://github.com/perplexhub/rsql-jpa-specification).
-`jpa-rsql-search` deliberately builds on that work instead of replacing its
-RSQL-to-JPA translation.
+### Perplexhub Backend
+
+The default backend is `PerplexhubRsqlBackendAdapter`. It wraps Perplexhub's
+`RSQLJPAPredicateConverter`, but it does not expose entity paths directly to the
+client. The adapter receives the validated `SearchDefinition`, passes public
+selector-to-JPA-path aliases to Perplexhub, applies the configured
+`ConversionService`, forwards the backend options, and turns any descriptor with
+`.jpaPredicate(...)` into a Perplexhub `RSQLCustomPredicate`.
+
+That means there are two levels of operator customization:
+
+- built-in operators such as `==`, `=in=`, `=ilike=`, and `=between=` are
+  registered by the library and executed through Perplexhub's native support;
+- application operators are registered with `RsqlOperatorDescriptor` and must
+  provide `.jpaPredicate(...)` so the Perplexhub adapter knows how to build the
+  JPA `Predicate`.
+
+For a custom operator executed by the default backend, always declare:
+
+- a logical `RsqlOperator`;
+- one or more parser symbols;
+- an arity;
+- an `argumentType(...)` compatible with `Comparable`;
+- a `jpaPredicate(...)` implementation.
+
+The predicate receives an `RsqlJpaPredicateContext` with the
+`CriteriaBuilder`, resolved JPA `Path`, metamodel `Attribute`, converted
+arguments, root/from, and logical operator. The same `ConversionService` is used
+for library validation and Perplexhub execution, so conversion rules stay
+consistent.
+
+Backend options can be set with Spring properties:
+
+```yaml
+jpa:
+  rsql:
+    search:
+      rsql:
+        perplexhub:
+          strict-equality: true
+          like-escape-character: "!"
+```
+
+or by providing a bean:
+
+```java
+@Bean
+PerplexhubRsqlBackendOptions perplexhubOptions() {
+    return PerplexhubRsqlBackendOptions.builder()
+            .strictEquality(true)
+            .likeEscapeCharacter('!')
+            .build();
+}
+```
+
+If you need Perplexhub behavior that is not exposed by these options, replace
+the `RsqlBackendAdapter` bean and compile `RsqlCompilationRequest<T>` yourself.
+
+### Custom Operators
+
+Create a logical `RsqlOperator`, describe its parser symbol and arity with
+`RsqlOperatorDescriptor`, and register it through a Spring
+`SearchRsqlEngineCustomizer` bean.
+
+```java
+@Configuration
+class SearchOperatorsConfiguration {
+
+    static final RsqlOperator STARTS_WITH = RsqlOperator.of("STARTS_WITH");
+
+    @Bean
+    SearchRsqlEngineCustomizer startsWithOperator() {
+        return builder -> builder.operator(
+                RsqlOperatorDescriptor.builder(STARTS_WITH)
+                        .symbol("=startsWith=")
+                        .arity(RsqlOperatorArity.exact(1))
+                        .argumentType(String.class)
+                        .jpaPredicate(context -> context.criteriaBuilder().like(
+                                context.path().as(String.class),
+                                context.argument(0) + "%"))
+                        .build());
+    }
+}
+```
+
+Then allow the operator on specific fields:
+
+```java
+SearchDefinition<CatalogTextEntry> definition = SearchDefinition.builder()
+        .entity(CatalogTextEntry.class)
+        .fields(fields -> fields.add("code", String.class)
+                .filterable(filter -> filter.allow(STARTS_WITH)))
+        .paging()
+        .build();
+```
+
+Custom operators are validated like built-in operators. With the default
+Perplexhub backend, a registered operator that is not built in must have a JPA
+predicate; otherwise the definition fails with
+`RSQL_OPERATOR_NOT_EXECUTABLE`. If `.jpaPredicate(...)` is present,
+`.argumentType(...)` is required so the backend can create the matching
+Perplexhub custom predicate.
+
+### Custom Conversion
+
+The engine uses one `ConversionService` for validation and backend compilation.
+If your application exposes a unique `ConversionService` bean, auto-configuration
+uses it. Otherwise, it builds an `ApplicationConversionService` and adds
+application `Converter` beans.
+
+```java
+record Sku(String value) {
+}
+
+@Component
+class SkuConverter implements Converter<String, Sku> {
+    @Override
+    public Sku convert(String source) {
+        if (!source.startsWith("SKU")) {
+            throw new IllegalArgumentException("SKU must start with SKU");
+        }
+        return new Sku(source);
+    }
+}
+```
+
+```java
+SearchDefinition<CatalogItem> definition = SearchDefinition.builder()
+        .entity(CatalogItem.class)
+        .fields(fields -> fields.add("sku", Sku.class)
+                .filterable(filter -> filter.allow(EQUAL)))
+        .paging()
+        .build();
+```
+
+Invalid converted values become `RSQL_ARGUMENT_CONVERSION_FAILED` validation
+errors rather than persistence exceptions.
+
+### Backend, Parser, and Definition Validation
+
+Register a `RsqlBackendAdapter` bean to replace the default Perplexhub-backed
+compiler, or a `RsqlParserFactory` through `SearchRsqlEngineCustomizer` to
+replace parser construction. Register one or more `SearchDefinitionValidator`
+beans to enforce additional runtime checks on completed definitions.
 
 ## Project Status
 
@@ -447,8 +777,8 @@ Generate JaCoCo coverage for unit and integration tests:
 ./mvnw -Pcoverage verify
 ```
 
-The XML report is written to `target/site/jacoco/jacoco.xml`; the HTML report
-is written to `target/site/jacoco/index.html`. CI uploads the JaCoCo report and
+The XML report is written to `target/site/jacoco/jacoco.xml`; the HTML report is
+written to `target/site/jacoco/index.html`. CI uploads the JaCoCo report and
 JUnit XML test results to Codecov, and runs SonarQube Cloud analysis when the
 repository has a `SONAR_TOKEN` secret configured.
 
@@ -457,6 +787,13 @@ Verify public Javadocs and release checks:
 ```bash
 ./mvnw -Prelease verify
 ```
+
+## Contributing
+
+Issues, bug reports, documentation improvements, and pull requests are welcome.
+Because the project is still pre-release, please keep proposed API changes
+small, explicit, and accompanied by tests or documentation updates where
+possible.
 
 ## License
 
