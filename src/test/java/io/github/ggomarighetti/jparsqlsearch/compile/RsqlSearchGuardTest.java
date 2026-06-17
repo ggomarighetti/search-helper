@@ -533,7 +533,8 @@ class RsqlSearchGuardTest {
                         RsqlValidationError.FIELD_NOT_ALLOWED,
                         RsqlValidationError.OPERATOR_NOT_ALLOWED),
                 exception.errors().stream().map(RsqlValidationError::code).toList());
-        assertThrows(UnsupportedOperationException.class, () -> exception.errors().clear());
+        List<RsqlValidationError> errors = exception.errors();
+        assertThrows(UnsupportedOperationException.class, errors::clear);
     }
 
     @Test
