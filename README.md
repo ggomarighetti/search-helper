@@ -677,6 +677,12 @@ For a custom operator executed by the default backend, always declare:
 - an `argumentType(...)` compatible with `Comparable`;
 - a `jpaPredicate(...)` implementation.
 
+`RsqlOperatorDescriptor.argumentType(...)` accepts any Java type so custom
+backends can use application-specific value objects. The bundled Perplexhub
+backend is stricter because `RSQLCustomPredicate` requires a `Comparable`
+argument type; non-comparable argument types are supported only with a backend
+that can execute them.
+
 The predicate receives an `RsqlJpaPredicateContext` with the
 `CriteriaBuilder`, resolved JPA `Path`, metamodel `Attribute`, converted
 arguments, root/from, and logical operator. The same `ConversionService` is used
@@ -753,7 +759,7 @@ Perplexhub backend, a registered operator that is not built in must have a JPA
 predicate; otherwise the definition fails with
 `RSQL_OPERATOR_NOT_EXECUTABLE`. If `.jpaPredicate(...)` is present,
 `.argumentType(...)` is required so the backend can create the matching
-Perplexhub custom predicate.
+Perplexhub custom predicate, and that type must implement `Comparable`.
 
 ### Custom Conversion
 

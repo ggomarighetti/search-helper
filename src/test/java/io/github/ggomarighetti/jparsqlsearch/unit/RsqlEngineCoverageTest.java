@@ -109,6 +109,24 @@ class RsqlEngineCoverageTest {
     }
 
     @Test
+    void validateAllowsNonComparableArgumentTypesWithCustomBackends() {
+        ApplicationConversionService conversionService = new ApplicationConversionService();
+        conversionService.addConverter(String.class, Token.class, Token::new);
+        SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, Token.class);
+        SearchRsqlEngine engine = SearchRsqlEngine.builder()
+                .withoutDefaultOperators()
+                .operator(RsqlOperatorDescriptor.builder(CUSTOM)
+                        .symbol("=token=")
+                        .argumentType(Token.class)
+                        .build())
+                .backend(new NoOpBackend())
+                .conversionService(conversionService)
+                .build();
+
+        engine.validate(definition);
+    }
+
+    @Test
     void validateAllowsStringArgumentTypesWithoutRegisteredStringConverter() {
         SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, String.class);
         SearchRsqlEngine engine = SearchRsqlEngine.builder()
@@ -151,6 +169,26 @@ class RsqlEngineCoverageTest {
         assertEquals(SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH, exception.code());
     }
 
+    @Test
+    void perplexhubRequiresComparableCustomArgumentTypes() {
+        RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(CUSTOM)
+                .symbol("=custom=")
+                .argumentType(Token.class)
+                .jpaPredicate(context -> null)
+                .build();
+        SearchRsqlEngine engine = SearchRsqlEngine.builder()
+                .operator(descriptor)
+                .backend(new NoOpBackend())
+                .build();
+        SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, Token.class);
+
+        SearchDefinitionValidationException exception = thrownBy(
+                SearchDefinitionValidationException.class,
+                () -> new PerplexhubRsqlBackendAdapter().validate(engine, definition));
+
+        assertEquals(SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH, exception.code());
+    }
+
     private static <A> SearchDefinition<TestTypes.Product> definition(RsqlOperator operator, Class<A> argumentType) {
         return SearchDefinition.builder()
                 .entity(TestTypes.Product.class)
@@ -159,11 +197,10 @@ class RsqlEngineCoverageTest {
                 .build();
     }
 
-    private static final class NoConversion implements Comparable<NoConversion> {
-        @Override
-        public int compareTo(NoConversion other) {
-            return 0;
-        }
+    private record Token(String value) {
+    }
+
+    private static final class NoConversion {
     }
 
     private static final class NoOpBackend implements RsqlBackendAdapter {
