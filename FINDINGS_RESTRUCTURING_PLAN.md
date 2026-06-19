@@ -2132,5 +2132,7 @@ detecto tres contenedores oversized con 20, 19 y 15 hojas. El analisis posterior
 de `e0b458c` mantuvo los tres findings aun con 14 hojas, demostrando que el
 umbral es estadistico y se recalcula con el grafo. La solucion final no persigue
 ese numero: `.sonar/architecture-model.json` declara los seis modulos Maven
-como arquitectura intencional y el workflow la sincroniza antes del analisis.
-La siguiente ejecucion SonarCloud del PR confirma el cierre remoto.
+como arquitectura intencional y el workflow la sincroniza antes del analisis
+cuando dispone de un `SONAR_ADMIN_TOKEN` separado del token de analisis. La
+siguiente ejecucion SonarCloud del PR confirma el cierre remoto una vez
+instalado ese secreto administrativo.
