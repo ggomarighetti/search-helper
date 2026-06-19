@@ -49,7 +49,14 @@ class SpringConfigurationMetadataIT {
 
     private static Path projectJar() throws Exception {
         try (Stream<Path> files = Files.list(Path.of("target"))) {
-            return files.filter(path -> path.getFileName().toString().matches("jpa-rsql-search-[^/]+\\.jar"))
+            return files.filter(path -> {
+                        String name = path.getFileName().toString();
+                        return name.startsWith("jpa-rsql-search-spring-boot-starter-")
+                                && name.endsWith(".jar")
+                                && !name.endsWith("-sources.jar")
+                                && !name.endsWith("-javadoc.jar")
+                                && !name.endsWith("-tests.jar");
+                    })
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("project JAR was not built before integration tests"));
         }
