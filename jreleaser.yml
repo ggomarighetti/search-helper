@@ -1,8 +1,14 @@
 signing:
-  active: ALWAYS
+  active: RELEASE
   pgp:
-    active: ALWAYS
+    active: RELEASE
     armored: true
+
+release:
+  github:
+    enabled: true
+    skipTag: true
+    skipRelease: true
 
 deploy:
   maven:

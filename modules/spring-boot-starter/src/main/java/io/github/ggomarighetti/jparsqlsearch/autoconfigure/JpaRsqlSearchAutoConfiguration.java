@@ -13,17 +13,34 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+/** Core Spring Boot auto-configuration for search definitions and compilation. */
 @AutoConfiguration(afterName = {
         "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration"
 }, after = JpaRsqlSearchRsqlAutoConfiguration.class)
 @EnableConfigurationProperties(JpaRsqlSearchProperties.class)
 class JpaRsqlSearchAutoConfiguration {
+    /** Creates the auto-configuration. */
+    JpaRsqlSearchAutoConfiguration() {
+    }
+
+    /**
+     * Creates the policy-aware search definition factory.
+     *
+     * @param properties configured search limits
+     * @return search definition factory
+     */
     @Bean
     @ConditionalOnMissingBean
     public SearchDefinitionFactory searchDefinitionFactory(JpaRsqlSearchProperties properties) {
         return new SearchDefinitionFactory(properties.toPolicy());
     }
 
+    /**
+     * Creates the JPA metamodel validator when an entity manager factory is available.
+     *
+     * @param entityManagerFactory application entity manager factory
+     * @return JPA search definition validator
+     */
     @Bean
     @ConditionalOnBean(EntityManagerFactory.class)
     @ConditionalOnMissingBean
@@ -31,6 +48,14 @@ class JpaRsqlSearchAutoConfiguration {
         return new JpaSearchDefinitionValidator(entityManagerFactory);
     }
 
+    /**
+     * Creates the search compiler once an RSQL engine is available.
+     *
+     * @param engine configured RSQL engine
+     * @param definitionValidators additional definition validators
+     * @param properties configured search limits
+     * @return search compiler
+     */
     @Bean
     @ConditionalOnBean(SearchRsqlEngine.class)
     @ConditionalOnMissingBean

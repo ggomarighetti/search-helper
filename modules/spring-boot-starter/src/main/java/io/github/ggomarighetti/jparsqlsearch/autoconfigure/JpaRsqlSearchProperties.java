@@ -3,6 +3,7 @@ package io.github.ggomarighetti.jparsqlsearch.autoconfigure;
 import io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** Bindable limits and backend settings for the starter auto-configuration. */
 @ConfigurationProperties(prefix = "jpa.rsql.search")
 class JpaRsqlSearchProperties {
     /** RSQL parser and backend settings. */

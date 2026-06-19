@@ -6,8 +6,11 @@ on:
       - master
     paths:
       - pom.xml
+      - modules/**/pom.xml
       - CHANGELOG.md
       - jreleaser.yml
+      - release-please-config.json
+      - .release-please-manifest.json
       - .github/workflows/release.yml
   workflow_dispatch:
     inputs:
@@ -162,20 +165,37 @@ jobs:
           set -euo pipefail
 
           version="${{ steps.release.outputs.version }}"
-          artifact_dir="target/staging-deploy/io/github/ggomarighetti/jpa-rsql-search/${version}"
-          test -f "${artifact_dir}/jpa-rsql-search-${version}.pom"
-          test -f "${artifact_dir}/jpa-rsql-search-${version}.jar"
-          test -f "${artifact_dir}/jpa-rsql-search-${version}-sources.jar"
-          test -f "${artifact_dir}/jpa-rsql-search-${version}-javadoc.jar"
-          find "${artifact_dir}" -maxdepth 1 -type f | sort
+          group_dir="target/staging-deploy/io/github/ggomarighetti"
+          parent_dir="${group_dir}/jpa-rsql-search-parent/${version}"
+          test -f "${parent_dir}/jpa-rsql-search-parent-${version}.pom"
+
+          artifacts=(
+            jpa-rsql-search-api
+            jpa-rsql-search-rsql-spi
+            jpa-rsql-search-core
+            jpa-rsql-search-jpa-validation
+            jpa-rsql-search-perplexhub
+            jpa-rsql-search-spring-boot-starter
+          )
+          for artifact in "${artifacts[@]}"; do
+            artifact_dir="${group_dir}/${artifact}/${version}"
+            test -f "${artifact_dir}/${artifact}-${version}.pom"
+            test -f "${artifact_dir}/${artifact}-${version}.jar"
+            test -f "${artifact_dir}/${artifact}-${version}-sources.jar"
+            test -f "${artifact_dir}/${artifact}-${version}-javadoc.jar"
+          done
+
+          test ! -e "${group_dir}/jpa-rsql-search/${version}"
+          test ! -e "${group_dir}/jpa-rsql-search-integration-tests/${version}"
+          find "${group_dir}" -type f | sort
 
       - name: Validate JReleaser configuration
         if: steps.release.outputs.release == 'true'
-        run: ./mvnw $MAVEN_ARGS jreleaser:config
+        run: ./mvnw $MAVEN_ARGS -N jreleaser:config
 
       - name: JReleaser dry-run
         if: steps.release.outputs.release == 'true'
-        run: ./mvnw $MAVEN_ARGS jreleaser:deploy -Djreleaser.dry.run=true
+        run: ./mvnw $MAVEN_ARGS -N jreleaser:deploy -Djreleaser.dry.run=true
 
       - name: Create signed tag
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true' && steps.release.outputs.tag_exists != 'true'
@@ -218,7 +238,7 @@ jobs:
 
       - name: Publish to Maven Central
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
-        run: ./mvnw $MAVEN_ARGS jreleaser:deploy
+        run: ./mvnw $MAVEN_ARGS -N jreleaser:deploy
 
       - name: Extract release notes
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
@@ -246,7 +266,7 @@ jobs:
           set -euo pipefail
 
           tag="${{ steps.release.outputs.tag }}"
-          title="jpa-rsql-search ${tag}"
+          title="jpa-rsql-search modular v2 ${tag}"
           if gh release view "${tag}" >/dev/null 2>&1; then
             gh release edit "${tag}" --title "${title}" --notes-file release-notes.md --latest
           else
@@ -264,6 +284,8 @@ jobs:
             echo "- Tag: ${{ steps.release.outputs.tag }}"
             echo "- Dry run: ${DRY_RUN}"
             echo "- Existing tag: ${{ steps.release.outputs.tag_exists }}"
+            echo "- Parent plus public modules: staged atomically"
+            echo "- Retired jpa-rsql-search artifact: not generated"
             echo "- Maven Central: published when dry run is false"
             echo "- GitHub Packages: published when dry run is false"
           } >> "$GITHUB_STEP_SUMMARY"

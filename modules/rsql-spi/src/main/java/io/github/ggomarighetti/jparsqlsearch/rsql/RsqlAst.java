@@ -20,6 +20,14 @@ public final class RsqlAst {
         this.comparisons = List.copyOf(Objects.requireNonNull(comparisons, "comparisons must not be null"));
     }
 
+    /**
+     * Creates a normalized AST from a parser-native node.
+     *
+     * @param node parser-native root node
+     * @param operators operator registry used to normalize comparisons
+     * @return parsed RSQL tree and its comparison view
+     * @throws IllegalArgumentException when a comparison uses an unregistered operator
+     */
     public static RsqlAst from(Node node, RsqlOperatorRegistry operators) {
         Objects.requireNonNull(operators, "operators must not be null");
         List<RsqlComparison> comparisons = new ArrayList<>();
