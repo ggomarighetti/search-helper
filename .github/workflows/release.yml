@@ -6,7 +6,8 @@ on:
       - master
     paths:
       - pom.xml
-      - modules/**/pom.xml
+      - jpa-rsql-search-*/pom.xml
+      - integration-tests/pom.xml
       - CHANGELOG.md
       - jreleaser.yml
       - release-please-config.json

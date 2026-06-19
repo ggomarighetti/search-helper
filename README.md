@@ -234,12 +234,15 @@ A backend validates definitions through
 
 | Artifact | Purpose |
 | --- | --- |
-| `jpa-rsql-search-api` | Definitions, policy, paths, filtering, paging, sorting, query, operators, and public errors |
-| `jpa-rsql-search-rsql-spi` | RSQL AST, backend contracts, parser contracts, and JPA operator bindings |
-| `jpa-rsql-search-core` | Engine construction and guarded compilation |
+| `jpa-rsql-search-api` | Definitions, policy, paths, filtering, paging, sorting, query, logical operators, and definition-time validation |
+| `jpa-rsql-search-rsql-spi` | RSQL AST, neutral operator metadata, backend contracts, parser contracts, and JPA operator bindings |
+| `jpa-rsql-search-core` | Engine construction, guarded compilation, runtime validation errors, and protection |
 | `jpa-rsql-search-jpa-validation` | JPA metamodel validation |
 | `jpa-rsql-search-perplexhub` | Perplexhub backend adapter and convenience engine factory |
 | `jpa-rsql-search-spring-boot-starter` | Combined dependency, auto-configuration, and configuration metadata |
+
+Each reactor module is a first-level repository directory; there is no
+additional `modules/` container.
 
 Advanced consumers may depend on selected modules instead of the starter:
 
@@ -266,10 +269,14 @@ Notable v2 imports:
 ```java
 import io.github.ggomarighetti.jparsqlsearch.path.SearchPath;
 import io.github.ggomarighetti.jparsqlsearch.definition.validation.SearchDefinitionValidator;
+import io.github.ggomarighetti.jparsqlsearch.page.validation.SearchPageableValidationException;
 import io.github.ggomarighetti.jparsqlsearch.protection.SearchProtectionException;
+import io.github.ggomarighetti.jparsqlsearch.query.validation.SearchQueryValidationException;
 import io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngine;
 import io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngines;
 import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateFactory;
+import io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorDescriptor;
+import io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlFilterValidationException;
 ```
 
 The old FQCNs do not exist in v2. See [MIGRATION_V2.md](MIGRATION_V2.md) for the

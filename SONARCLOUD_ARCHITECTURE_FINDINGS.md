@@ -44,18 +44,21 @@ un reactor con ownership fisico. El cierre local es:
 | Hallazgo | Resolucion implementada | Gate |
 |---|---|---|
 | Tangle RSQL | engine en `rsql.engine`, backend context estrecho y Perplexhub fuera de core | ArchUnit prohibe backend SPI -> engine y core -> Perplexhub |
-| Oversized | parent, seis modulos publicables e integracion no publicable | inspeccion de jars y DAG Maven |
+| Oversized | modulos limitados a 20 clases top-level | leaf-budget test, inspeccion de jars y DAG Maven |
 | Weak tangle principal | `path` transversal y SPI en `definition.validation` | ciclos por modulo y dependencias prohibidas |
 | Weak tangle operadores/backend | descriptor neutral y bindings en `rsql.jpa` | test de operadores custom y regla anti-JPA en metadata |
-| Split `exception` | `SearchProtectionException` en `protection` | test de ausencia del FQCN legacy |
-| Split `validation` | `SearchDefinitionValidator` en `definition.validation` | test de ausencia del FQCN legacy |
+| Split `exception` | errores runtime en `rsql.validation`, `page.validation`, `query.validation` y `protection` | test de ausencia de FQCN legacy |
+| Split `validation` | `SearchDefinitionValidator` en `definition.validation`, con owner core | test de ausencia del FQCN legacy |
 
-El reporte JaCoCo agregado cubre 112 clases, 2.888 lineas y 820 ramas al 100%.
+El reporte JaCoCo agregado cubre 112 clases, 2.895 lineas y 826 ramas al 100%.
 Los consumer tests compilan tanto el starter como una seleccion de modulos.
 
-La confirmacion autoritativa de los contadores Architecture se obtiene del
-analisis SonarCloud del PR de v2. Hasta que ese analisis exista, este documento
-distingue deliberadamente entre evidencia estructural local y estado remoto.
+El primer analisis del PR #26 confirmo `Tangles = 0` y `Weak tangles = 0`, pero
+detecto un componente `Oversized` en API y dos splits residuales en API y
+RSQL SPI. La correccion posterior reduce API a 20 clases top-level, mueve
+metadata y errores runtime a sus owners, y conecta el parser con el AST
+normalizado. La confirmacion autoritativa final corresponde al siguiente
+analisis SonarCloud del mismo PR.
 
 ## 1. Flaw: Tangle RSQL
 

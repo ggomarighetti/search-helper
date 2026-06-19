@@ -15,13 +15,13 @@
   <inceptionYear>2026</inceptionYear>
 
   <modules>
-    <module>modules/api</module>
-    <module>modules/rsql-spi</module>
-    <module>modules/core</module>
-    <module>modules/jpa-validation</module>
-    <module>modules/perplexhub</module>
-    <module>modules/spring-boot-starter</module>
-    <module>modules/integration-tests</module>
+    <module>jpa-rsql-search-api</module>
+    <module>jpa-rsql-search-rsql-spi</module>
+    <module>jpa-rsql-search-core</module>
+    <module>jpa-rsql-search-jpa-validation</module>
+    <module>jpa-rsql-search-perplexhub</module>
+    <module>jpa-rsql-search-spring-boot-starter</module>
+    <module>integration-tests</module>
   </modules>
 
   <licenses>

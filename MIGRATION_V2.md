@@ -87,12 +87,20 @@ The new JPA-specific contracts live under
 | --- | --- |
 | `definition.SearchPath` | `path.SearchPath` |
 | `validation.SearchDefinitionValidator` | `definition.validation.SearchDefinitionValidator` |
+| `exception.RsqlFilterValidationException` | `rsql.validation.RsqlFilterValidationException` |
+| `exception.RsqlValidationError` | `rsql.validation.RsqlValidationError` |
+| `exception.SearchPageableValidationException` | `page.validation.SearchPageableValidationException` |
 | `exception.SearchProtectionException` | `protection.SearchProtectionException` |
+| `exception.SearchQueryValidationException` | `query.validation.SearchQueryValidationException` |
 | `rsql.SearchRsqlEngine` | `rsql.engine.SearchRsqlEngine` |
 | `rsql.SearchRsqlEngineBuilder` | `rsql.engine.SearchRsqlEngineBuilder` |
 | `rsql.SearchRsqlEngineCustomizer` | `rsql.engine.SearchRsqlEngineCustomizer` |
 | `rsql.backend.RsqlJpaPredicateContext` | `rsql.jpa.RsqlJpaPredicateContext` |
 | `rsql.backend.RsqlJpaPredicateFactory` | `rsql.jpa.RsqlJpaPredicateFactory` |
+| `rsql.operator.DefaultRsqlOperatorDescriptors` | `rsql.metadata.DefaultRsqlOperatorDescriptors` |
+| `rsql.operator.RsqlOperatorArity` | `rsql.metadata.RsqlOperatorArity` |
+| `rsql.operator.RsqlOperatorDescriptor` | `rsql.metadata.RsqlOperatorDescriptor` |
+| `rsql.operator.RsqlOperatorRegistry` | `rsql.metadata.RsqlOperatorRegistry` |
 
 The old types were deleted and are not deprecated aliases.
 
@@ -129,4 +137,4 @@ must use the v2 packages.
 6. Update custom backend validation to use
    `RsqlBackendValidationContext`.
 7. Compile and run endpoint-level search tests.
-8. Recheck exception mappings for the moved protection exception.
+8. Recheck exception mappings for all moved runtime validation exceptions.

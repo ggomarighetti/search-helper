@@ -17,17 +17,17 @@ Owners ejecutados en v2:
 
 | Modulo | Ownership |
 |---|---|
-| `jpa-rsql-search-api` | definiciones, policy, path, filter, page, query, sort, errores y metadata de operadores |
-| `jpa-rsql-search-rsql-spi` | AST, parser, backend contracts y bindings JPA |
-| `jpa-rsql-search-core` | engine y compilacion protegida |
-| `jpa-rsql-search-jpa-validation` | validacion contra metamodelo JPA |
+| `jpa-rsql-search-api` | definiciones, policy, path, filter, page, query, sort, operadores logicos y validacion declarativa |
+| `jpa-rsql-search-rsql-spi` | AST, metadata RSQL, parser, backend contracts y bindings JPA |
+| `jpa-rsql-search-core` | engine, compilacion protegida, errores runtime y SPI de validacion de definiciones |
+| `jpa-rsql-search-jpa-validation` | implementacion de validacion contra metamodelo JPA |
 | `jpa-rsql-search-perplexhub` | adapter y composition root Perplexhub |
 | `jpa-rsql-search-spring-boot-starter` | auto-configuracion, properties y recurso Spring |
 | `integration-tests` | ArchUnit, inspeccion de jars, consumidores e ITs Postgres |
 
 Las rutas `src/...` del inventario secuencial son historicas. Sus archivos
-fueron distribuidos bajo `modules/<owner>/src/...`; los movimientos publicos se
-documentan en `MIGRATION_V2.md`.
+fueron distribuidos bajo `<artifactId>/src/...` en directorios de primer nivel;
+los movimientos publicos se documentan en `MIGRATION_V2.md`.
 
 ## Formato De Ficha
 

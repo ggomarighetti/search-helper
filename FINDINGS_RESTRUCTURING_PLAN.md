@@ -527,8 +527,8 @@ reducir lineas agregaria hojas y desviaria el objetivo.
 
 ### 9.3 Invariantes
 
-- La dependencia historica `io.github.ggomarighetti:jpa-rsql-search` debe seguir
-  siendo utilizable por consumidores.
+- La dependencia historica `io.github.ggomarighetti:jpa-rsql-search` queda
+  congelada en 1.x.
 - Spring Boot debe descubrir la auto-configuracion desde el classpath final.
 - No se deben duplicar clases con el mismo FQCN en dos jars.
 - Cada clase tiene un unico modulo owner.
@@ -537,22 +537,21 @@ reducir lineas agregaria hojas y desviaria el objetivo.
 
 ### 9.4 Decision
 
-Convertir el repositorio a multi-modulo y usar un jar facade sin logica interna
-como coordenada de compatibilidad.
+Convertir el repositorio a multi-modulo sin facade ni capa de compatibilidad.
+Cada modulo se expone como directorio de primer nivel para que el ownership sea
+visible sin una carpeta contenedora artificial.
 
 Estructura final:
 
 ```text
 pom.xml                                  parent/aggregator
-modules/
-  api/
-  rsql-spi/
-  core/
-  jpa-validation/
-  perplexhub/
-  spring-boot-autoconfigure/
-  facade/
-  integration-tests/                    no publicable
+jpa-rsql-search-api/
+jpa-rsql-search-rsql-spi/
+jpa-rsql-search-core/
+jpa-rsql-search-jpa-validation/
+jpa-rsql-search-perplexhub/
+jpa-rsql-search-spring-boot-starter/
+integration-tests/                       no publicable
 ```
 
 El parent usa un artifact distinto, por ejemplo:
@@ -561,15 +560,13 @@ El parent usa un artifact distinto, por ejemplo:
 io.github.ggomarighetti:jpa-rsql-search-parent
 ```
 
-El modulo `facade` publica la coordenada historica:
+El starter publica el punto de entrada combinado:
 
 ```text
-io.github.ggomarighetti:jpa-rsql-search
+io.github.ggomarighetti:jpa-rsql-search-spring-boot-starter
 ```
 
-y declara dependencias transitivas sobre los modulos necesarios. Asi una
-aplicacion puede seguir declarando un solo artefacto, mientras la arquitectura
-interna queda separada.
+y declara dependencias transitivas sobre los modulos funcionales.
 
 ### 9.5 Presupuesto De Hojas Por Modulo
 
@@ -2085,19 +2082,21 @@ Implementacion completada el 19 de junio de 2026 en
 
 - parent publicable `jpa-rsql-search-parent`;
 - seis jars publicables con version comun `2.0.0-SNAPSHOT`;
+- modulos expuestos como directorios de primer nivel, sin contenedor
+  `modules/`;
 - `integration-tests` excluido de deploy;
 - starter combinado con auto-configuracion y metadata Spring;
 - engine en `rsql.engine` y construccion generica mediante
   `SearchRsqlEngines.builder(backend)`;
 - composicion Perplexhub mediante `PerplexhubRsqlEngines`;
-- metadata neutral y bindings JPA separados en `rsql.jpa`;
+- metadata neutral en `rsql.metadata` y bindings JPA separados en `rsql.jpa`;
 - `SearchPath`, `SearchDefinitionValidator` y
   `SearchProtectionException` movidos a sus owners finales sin aliases;
 - cero packages o clases duplicadas entre los jars;
 - reglas ArchUnit para ciclos y dependencias prohibidas;
 - consumidores Maven del starter y de modulos selectivos;
-- 287 tests ejecutados sin fallos;
-- JaCoCo agregado sobre 112 clases, 2.888 lineas y 820 ramas, todo cubierto;
+- 288 tests ejecutados sin fallos;
+- JaCoCo agregado sobre 112 clases, 2.895 lineas y 826 ramas, todo cubierto;
 - staging local con parent, jars, sources y Javadocs;
 - ausencia verificada de `jpa-rsql-search:2.x` y del modulo de integracion en
   el staging;
@@ -2114,11 +2113,11 @@ Estado local de los seis findings:
 | Finding original | Evidencia de cierre |
 |---|---|
 | Tangle RSQL | backend SPI no depende de engine; engine/core no depende de Perplexhub |
-| Oversized | reactor con ownership fisico por modulo |
+| Oversized | presupuesto maximo de 20 clases top-level por modulo |
 | Weak tangle principal | `path` y `definition.validation` tienen owner unico y DAG protegido |
 | Weak tangle operadores/backend | descriptor neutral y registry JPA separado |
-| Split `exception` | proteccion movida a `protection` |
-| Split `validation` | SPI movido a `definition.validation` |
+| Split `exception` | errores runtime distribuidos entre `rsql.validation`, `page.validation`, `query.validation` y `protection` |
+| Split `validation` | SPI movido a `definition.validation` dentro de core |
 
 La confirmacion remota autoritativa se realiza en el analisis SonarCloud del PR
 de v2; el gate local impide reintroducir las dependencias que originaron los
