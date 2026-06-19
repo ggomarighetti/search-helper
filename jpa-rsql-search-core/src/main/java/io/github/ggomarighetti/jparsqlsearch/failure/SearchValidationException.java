@@ -1,5 +1,6 @@
 package io.github.ggomarighetti.jparsqlsearch.failure;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +9,7 @@ public abstract class SearchValidationException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     private final String code;
-    private final List<?> details;
+    private final List<? extends Serializable> details;
 
     /**
      * Creates a validation exception without an underlying cause.
@@ -17,7 +18,7 @@ public abstract class SearchValidationException extends RuntimeException {
      * @param message safe error message
      * @param details immutable-copied validation details
      */
-    protected SearchValidationException(String code, String message, List<?> details) {
+    protected SearchValidationException(String code, String message, List<? extends Serializable> details) {
         this(code, message, details, null);
     }
 
@@ -32,7 +33,7 @@ public abstract class SearchValidationException extends RuntimeException {
     protected SearchValidationException(
             String code,
             String message,
-            List<?> details,
+            List<? extends Serializable> details,
             Throwable cause) {
         super(message, cause);
         this.code = requireCode(code);
@@ -54,7 +55,7 @@ public abstract class SearchValidationException extends RuntimeException {
      * @return immutable validation detail list
      */
     @SuppressWarnings("unchecked")
-    protected final <T> List<T> details() {
+    protected final <T extends Serializable> List<T> details() {
         return (List<T>) details;
     }
 
