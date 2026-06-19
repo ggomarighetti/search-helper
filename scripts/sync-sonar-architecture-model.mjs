@@ -6,6 +6,7 @@ const organizationId =
   process.env.SONAR_ORGANIZATION_ID ?? "df8bd268-70a4-4338-a093-2cfebc6ad4ff";
 const token = process.env.SONAR_TOKEN;
 const checkOnly = process.argv.includes("--check");
+const deleteOnly = process.argv.includes("--delete");
 const modelPath = resolve(".sonar", "architecture-model.json");
 const perspectiveLabel = "V2 Maven package leaves";
 const perspectiveDescription =
@@ -51,6 +52,24 @@ const models = await sonarRequest(
   `https://api.sonarcloud.io/architecture/models?projectId=${encodeURIComponent(mainBranchId)}`,
   { headers: commonHeaders },
 );
+
+if (deleteOnly) {
+  if (models.length === 0) {
+    console.log(`No Sonar intended architecture model exists for ${projectKey}.`);
+    process.exit(0);
+  }
+  for (const existingModel of models) {
+    await sonarRequest(
+      `https://api.sonarcloud.io/architecture/models/${encodeURIComponent(existingModel.id)}`,
+      {
+        method: "DELETE",
+        headers: commonHeaders,
+      },
+    );
+  }
+  console.log(`Deleted ${models.length} Sonar intended architecture model(s) for ${projectKey}.`);
+  process.exit(0);
+}
 
 if (models.length === 0) {
   await sonarRequest("https://api.sonarcloud.io/architecture/models", {

@@ -98,16 +98,16 @@ jobs:
       - name: Validate Sonar intended architecture
         run: node scripts/sync-sonar-architecture-model.mjs --check
 
-      - name: Sync Sonar intended architecture
+      - name: Remove stale Sonar intended architecture
         if: ${{ env.SONAR_TOKEN != '' }}
         env:
           SONAR_ORGANIZATION_ID: df8bd268-70a4-4338-a093-2cfebc6ad4ff
           SONAR_PROJECT_KEY: ggomarighetti_jpa-rsql-search
-        run: node scripts/sync-sonar-architecture-model.mjs
+        run: node scripts/sync-sonar-architecture-model.mjs --delete
 
-      - name: Skip Sonar intended architecture sync
+      - name: Skip Sonar intended architecture cleanup
         if: ${{ env.SONAR_TOKEN == '' }}
-        run: echo "SONAR_TOKEN secret is not configured; keeping the validated model declaration without changing SonarCloud."
+        run: echo "SONAR_TOKEN secret is not configured; keeping the validated local model declaration without changing SonarCloud."
 
       - name: SonarQube Cloud analysis
         if: ${{ env.SONAR_TOKEN != '' }}
