@@ -7,201 +7,303 @@
       "qualifiers": "namespace",
       "groups": [
         {
-          "label": "jpa-rsql-search-api",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition",
           "patterns": [
-            "jpa-rsql-search-api:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.definition",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.definition.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.exception",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.exception.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.filter",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.page",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.page.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.path",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.path.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.policy",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.policy.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.query",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.query.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.operator",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.rsql.operator.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.sort",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.sort.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.validation",
-              "patterns": [
-                "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.validation.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition"
           ]
         },
         {
-          "label": "jpa-rsql-search-rsql-spi",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.definition.SearchField",
           "patterns": [
-            "jpa-rsql-search-rsql-spi:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql",
-              "patterns": [
-                "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.backend",
-              "patterns": [
-                "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.backend.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.jpa",
-              "patterns": [
-                "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.metadata",
-              "patterns": [
-                "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.parser",
-              "patterns": [
-                "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.parser.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.definition.SearchField"
           ]
         },
         {
-          "label": "jpa-rsql-search-core",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.exception.SearchDefinitionValidationException",
           "patterns": [
-            "jpa-rsql-search-core:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.compile",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.definition.validation",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.definition.validation.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.page.validation",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.page.validation.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.protection",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.protection.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.query.validation",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.query.validation.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.engine",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.*"
-              ]
-            },
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.validation",
-              "patterns": [
-                "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.validation.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.exception.SearchDefinitionValidationException"
           ]
         },
         {
-          "label": "jpa-rsql-search-jpa-validation",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.FilterOperator",
           "patterns": [
-            "jpa-rsql-search-jpa-validation:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.jpa",
-              "patterns": [
-                "jpa-rsql-search-jpa-validation:io.github.ggomarighetti.jparsqlsearch.jpa.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.FilterOperator"
           ]
         },
         {
-          "label": "jpa-rsql-search-perplexhub",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.FilterValidationResult",
           "patterns": [
-            "jpa-rsql-search-perplexhub:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub",
-              "patterns": [
-                "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.FilterValidationResult"
           ]
         },
         {
-          "label": "jpa-rsql-search-spring-boot-starter",
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.SearchFiltering",
           "patterns": [
-            "jpa-rsql-search-spring-boot-starter:**"
-          ],
-          "groups": [
-            {
-              "label": "io.github.ggomarighetti.jparsqlsearch.autoconfigure",
-              "patterns": [
-                "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.*"
-              ]
-            }
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.filter.SearchFiltering"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.page.SearchPaging",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.page.SearchPaging"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.path.SearchPath",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.path.SearchPath"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.query.SearchQuery",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.query.SearchQuery"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperators",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperators"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.sort.SearchSorting",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.sort.SearchSorting"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.validation.RuleViolation",
+          "patterns": [
+            "jpa-rsql-search-api:io.github.ggomarighetti.jparsqlsearch.validation.RuleViolation"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.CompiledSearch",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.CompiledSearch"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.RsqlRulesValidator",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.RsqlRulesValidator"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.RsqlSearchGuard",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.RsqlSearchGuard"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.SearchCompiler",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.SearchCompiler"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.SearchProtectionContext",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.compile.SearchProtectionContext"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.definition.validation.SearchDefinitionValidator",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.definition.validation.SearchDefinitionValidator"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.page.validation.SearchPageableValidationException",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.page.validation.SearchPageableValidationException"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.protection.SearchProtectionException",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.protection.SearchProtectionException"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.query.validation.SearchQueryValidationException",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.query.validation.SearchQueryValidationException"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngine",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngine"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngineBuilder",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngineBuilder"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngines",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.engine.SearchRsqlEngines"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlFilterValidationException",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlFilterValidationException"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlValidationError",
+          "patterns": [
+            "jpa-rsql-search-core:io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlValidationError"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-jpa-validation:io.github.ggomarighetti.jparsqlsearch.jpa.JpaSearchDefinitionValidator",
+          "patterns": [
+            "jpa-rsql-search-jpa-validation:io.github.ggomarighetti.jparsqlsearch.jpa.JpaSearchDefinitionValidator"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlBackendAdapter",
+          "patterns": [
+            "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlBackendAdapter"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlBackendOptions",
+          "patterns": [
+            "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlBackendOptions"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlEngines",
+          "patterns": [
+            "jpa-rsql-search-perplexhub:io.github.ggomarighetti.jparsqlsearch.rsql.backend.perplexhub.PerplexhubRsqlEngines"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendAdapter",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendAdapter"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendValidationContext",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendValidationContext"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateContext",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateContext"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateFactory",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateFactory"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.DefaultRsqlOperatorDescriptors",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.DefaultRsqlOperatorDescriptors"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorArity",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorArity"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorDescriptor",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorDescriptor"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorRegistry",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorRegistry"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.parser.RsqlParserFactory",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.parser.RsqlParserFactory"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlAst",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlAst"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlComparison",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlComparison"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlCompilationRequest",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:io.github.ggomarighetti.jparsqlsearch.rsql.RsqlCompilationRequest"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchAutoConfiguration",
+          "patterns": [
+            "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchAutoConfiguration"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchProperties",
+          "patterns": [
+            "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchProperties"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchRsqlAutoConfiguration",
+          "patterns": [
+            "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.JpaRsqlSearchRsqlAutoConfiguration"
+          ]
+        },
+        {
+          "label": "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.SearchRsqlEngineCustomizer",
+          "patterns": [
+            "jpa-rsql-search-spring-boot-starter:io.github.ggomarighetti.jparsqlsearch.autoconfigure.SearchRsqlEngineCustomizer"
           ]
         }
       ]

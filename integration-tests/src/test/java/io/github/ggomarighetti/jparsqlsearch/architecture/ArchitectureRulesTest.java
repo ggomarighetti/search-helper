@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -44,7 +45,7 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void sonarIntendedArchitectureMapsEveryProductModule() throws IOException {
+    void sonarIntendedArchitectureMapsEveryProductionType() throws IOException {
         Path root = Path.of(System.getProperty("workspace.root"));
         JsonNode model = new ObjectMapper()
                 .readTree(Files.readString(root.resolve(".sonar/architecture-model.json")));
@@ -59,16 +60,15 @@ class ArchitectureRulesTest {
                             .forEach(pattern -> mappedPatterns.add(pattern.asText()));
                 });
 
-        Set<String> expectedPatterns = new HashSet<>();
-        PRODUCT_MODULES.forEach(module -> expectedPatterns.add(module + ":**"));
+        Set<String> expectedPatterns = expectedSonarTypePatterns(root);
         assertEquals(
                 expectedPatterns,
                 mappedPatterns,
-                () -> "Sonar architecture patterns differ from the product modules: " + mappedPatterns);
+                () -> "Sonar architecture patterns differ from production Java types: " + mappedPatterns);
         assertEquals(
-                new HashSet<>(PRODUCT_MODULES),
+                expectedPatterns,
                 mappedLabels,
-                () -> "Sonar architecture labels must match the Maven artifactIds: " + mappedLabels);
+                () -> "Sonar architecture labels must match the production Java type patterns: " + mappedLabels);
     }
 
     @Test
@@ -103,5 +103,22 @@ class ArchitectureRulesTest {
         noClasses().that().resideInAPackage("..rsql.metadata..")
                 .should().dependOnClassesThat().resideInAPackage("..rsql.jpa..")
                 .check(classes);
+    }
+
+    private static Set<String> expectedSonarTypePatterns(Path root) throws IOException {
+        Set<String> patterns = new HashSet<>();
+        for (String module : PRODUCT_MODULES) {
+            Path sourceRoot = root.resolve(module).resolve("src/main/java");
+            try (Stream<Path> files = Files.walk(sourceRoot)) {
+                files.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".java"))
+                        .map(sourceRoot::relativize)
+                        .map(Path::toString)
+                        .map(path -> path.replace('\\', '.').replace('/', '.'))
+                        .map(path -> module + ":" + path.replaceAll("\\.java$", ""))
+                        .forEach(patterns::add);
+            }
+        }
+        return patterns;
     }
 }

@@ -1,5 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readdir, readFile } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 
 const projectKey = process.env.SONAR_PROJECT_KEY ?? "ggomarighetti_jpa-rsql-search";
 const organizationId =
@@ -7,14 +7,15 @@ const organizationId =
 const token = process.env.SONAR_TOKEN;
 const checkOnly = process.argv.includes("--check");
 const modelPath = resolve(".sonar", "architecture-model.json");
-const expectedPatterns = new Set([
-  "jpa-rsql-search-api:**",
-  "jpa-rsql-search-rsql-spi:**",
-  "jpa-rsql-search-core:**",
-  "jpa-rsql-search-jpa-validation:**",
-  "jpa-rsql-search-perplexhub:**",
-  "jpa-rsql-search-spring-boot-starter:**",
-]);
+const productModules = [
+  "jpa-rsql-search-api",
+  "jpa-rsql-search-rsql-spi",
+  "jpa-rsql-search-core",
+  "jpa-rsql-search-jpa-validation",
+  "jpa-rsql-search-perplexhub",
+  "jpa-rsql-search-spring-boot-starter",
+];
+const expectedPatterns = await collectExpectedPatterns();
 
 const model = JSON.parse(await readFile(modelPath, "utf8"));
 validateModel(model);
@@ -106,18 +107,65 @@ function validateModel(candidate) {
   if (perspective.language !== "java" || perspective.qualifiers !== "namespace") {
     throw new Error("The architecture perspective must target Java namespaces.");
   }
-  const patterns = new Set(
-    perspective.groups?.flatMap((group) => group.patterns ?? []) ?? [],
-  );
+  const groups = perspective.groups ?? [];
+  const labels = new Set();
+  const patterns = new Set();
+  for (const group of groups) {
+    const groupPatterns = group.patterns ?? [];
+    if ((group.groups ?? []).length > 0) {
+      throw new Error(
+        "The architecture declaration must keep production Java types as flat Sonar groups.",
+      );
+    }
+    if (groupPatterns.length !== 1 || groupPatterns[0] !== group.label) {
+      throw new Error(
+        "Each Sonar architecture group must map exactly one production Java type and use the same label.",
+      );
+    }
+    labels.add(group.label);
+    patterns.add(groupPatterns[0]);
+  }
   if (
     patterns.size !== expectedPatterns.size ||
-    [...expectedPatterns].some((pattern) => !patterns.has(pattern))
+    labels.size !== expectedPatterns.size ||
+    [...expectedPatterns].some((pattern) => !patterns.has(pattern) || !labels.has(pattern))
   ) {
-    throw new Error("The architecture declaration must map every public Maven module once.");
+    throw new Error("The architecture declaration must map every production Java type once.");
   }
   if ((perspective.constraints ?? []).length > 0) {
     throw new Error(
       "Sonar intended architecture constraints are intentionally kept out of the synchronized model; Maven and ArchUnit enforce the DAG.",
     );
   }
+}
+
+async function collectExpectedPatterns() {
+  const patterns = [];
+  for (const moduleName of productModules) {
+    const sourceRoot = resolve(moduleName, "src", "main", "java");
+    const files = await collectJavaFiles(sourceRoot);
+    patterns.push(
+      ...files.map((file) => {
+        const className = relative(sourceRoot, file)
+          .replace(/[\\/]/g, ".")
+          .replace(/\.java$/, "");
+        return `${moduleName}:${className}`;
+      }),
+    );
+  }
+  return new Set(patterns);
+}
+
+async function collectJavaFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) {
+        return collectJavaFiles(path);
+      }
+      return entry.isFile() && entry.name.endsWith(".java") ? [path] : [];
+    }),
+  );
+  return files.flat().sort();
 }
