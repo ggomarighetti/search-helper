@@ -36,8 +36,9 @@ public final class RsqlAst {
                         descriptor.operator(),
                         comparison.getArguments()));
             } else if (current instanceof LogicalNode logical) {
-                for (Node child : logical.getChildren()) {
-                    stack.push(child);
+                List<Node> children = logical.getChildren();
+                for (int index = children.size() - 1; index >= 0; index--) {
+                    stack.push(children.get(index));
                 }
             }
         }
@@ -54,7 +55,7 @@ public final class RsqlAst {
     }
 
     /**
-     * Returns the normalized comparison view.
+     * Returns the normalized comparison view in left-to-right RSQL order.
      *
      * @return immutable normalized comparisons contained in the tree
      */

@@ -32,6 +32,15 @@ class RsqlAstTest {
         assertEquals(List.of(), ast.comparisons());
     }
 
+    @Test
+    void preservesLeftToRightComparisonOrder() {
+        RsqlAst ast = SearchRsqlEngine.defaults().parse("email==a;name==b;taxId==c");
+
+        assertEquals(
+                List.of("email", "name", "taxId"),
+                ast.comparisons().stream().map(RsqlComparison::selector).toList());
+    }
+
     private static final class UnsupportedNode implements Node {
         @Override
         public <R, A> R accept(RSQLVisitor<R, A> visitor, A param) {
