@@ -26,6 +26,17 @@ public final class SearchRsqlEngineBuilder {
     }
 
     /**
+     * Removes the default operator descriptors so callers can build a custom dialect
+     * from an empty registry.
+     *
+     * @return this builder
+     */
+    public SearchRsqlEngineBuilder withoutDefaultOperators() {
+        operators.clear();
+        return this;
+    }
+
+    /**
      * Adds one operator descriptor.
      *
      * @param descriptor operator descriptor

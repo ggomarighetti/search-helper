@@ -647,6 +647,11 @@ The everyday API is intentionally small, but the RSQL layer remains extensible.
 | `ConversionService` / `Converter<String, T>` | Add application-specific value conversion |
 | `jpa.rsql.search.rsql.perplexhub.*` | Configure the bundled Perplexhub backend |
 
+`SearchRsqlEngine.builder()` starts with the built-in operator dialect. For a
+strictly custom dialect, call `.withoutDefaultOperators()` before adding custom
+`RsqlOperatorDescriptor` instances. In Spring Boot, a `SearchRsqlEngineCustomizer`
+can do the same for the auto-configured engine.
+
 ### Perplexhub Backend
 
 The default backend is `PerplexhubRsqlBackendAdapter`. It wraps Perplexhub's

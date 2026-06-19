@@ -45,6 +45,19 @@ class RsqlEngineCoverageTest {
     }
 
     @Test
+    void builderCanStartWithoutDefaultOperators() {
+        SearchRsqlEngine engine = SearchRsqlEngine.builder()
+                .withoutDefaultOperators()
+                .operator(RsqlOperatorDescriptor.of(CUSTOM, "=custom="))
+                .backend(new NoOpBackend())
+                .build();
+
+        assertFalse(engine.operators().descriptor(EQUAL).isPresent());
+        assertTrue(engine.operators().descriptor(CUSTOM).isPresent());
+        assertNotNull(engine.parse("email=custom=value"));
+    }
+
+    @Test
     void parsedAstExposesNormalizedComparisonsForLogicalExpressions() {
         var ast = SearchRsqlEngine.defaults().parse("email==a;name==b");
 

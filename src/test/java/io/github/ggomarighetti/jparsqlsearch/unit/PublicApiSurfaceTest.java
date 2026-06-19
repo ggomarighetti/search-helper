@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy;
 import io.github.ggomarighetti.jparsqlsearch.rsql.RsqlCompilationRequest;
 import io.github.ggomarighetti.jparsqlsearch.rsql.SearchRsqlEngine;
+import io.github.ggomarighetti.jparsqlsearch.rsql.SearchRsqlEngineBuilder;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class PublicApiSurfaceTest {
                 SearchRsqlEngine.class.getMethod("parse", String.class).getModifiers()));
         assertTrue(Modifier.isPublic(
                 SearchRsqlEngine.class.getMethod("compile", RsqlCompilationRequest.class).getModifiers()));
+        assertTrue(Modifier.isPublic(
+                SearchRsqlEngineBuilder.class.getMethod("withoutDefaultOperators").getModifiers()));
         assertTrue(Modifier.isPublic(
                 SearchPolicy.Builder.class.getMethod("buildOverlay").getModifiers()));
     }
