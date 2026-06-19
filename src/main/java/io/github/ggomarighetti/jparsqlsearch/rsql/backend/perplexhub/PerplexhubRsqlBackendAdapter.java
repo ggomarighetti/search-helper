@@ -52,7 +52,9 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
     @Override
     public <T> Specification<T> compile(RsqlCompilationRequest<T> request) {
         return (root, query, criteriaBuilder) -> {
-            query.distinct(request.distinct());
+            if (request.distinct()) {
+                query.distinct(true);
+            }
             PredicateContext context = new PredicateContext(request, root, criteriaBuilder);
             return context.predicate(request.ast().node());
         };
