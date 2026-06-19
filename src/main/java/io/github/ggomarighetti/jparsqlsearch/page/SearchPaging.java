@@ -9,7 +9,7 @@ import java.util.Objects;
 import org.hibernate.validator.cfg.ConstraintDef;
 
 /** Definition-level Bean Validation rules for page number and page size. */
-public final class SearchPaging {
+public final class SearchPaging implements AutoCloseable {
     private static final SearchPaging DISABLED =
             new SearchPaging(false, HibernateRuleValidator.none(), HibernateRuleValidator.none());
 
@@ -102,6 +102,13 @@ public final class SearchPaging {
      */
     public List<RuleViolation> sizeViolations(int size) {
         return enabled ? this.size.violations(size) : List.of();
+    }
+
+    /** Releases validator resources owned by this paging declaration. */
+    @Override
+    public void close() {
+        page.close();
+        size.close();
     }
 
     /** Builder for definition-level paging rules. */

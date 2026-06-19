@@ -52,7 +52,9 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
     @Override
     public <T> Specification<T> compile(RsqlCompilationRequest<T> request) {
         return (root, query, criteriaBuilder) -> {
-            query.distinct(request.distinct());
+            if (request.distinct()) {
+                query.distinct(true);
+            }
             PredicateContext context = new PredicateContext(request, root, criteriaBuilder);
             return context.predicate(request.ast().node());
         };
@@ -70,7 +72,14 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
             if (descriptor.jpaPredicateFactory().isPresent() && descriptor.argumentType().isEmpty()) {
                 throw new SearchDefinitionValidationException(
                         SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH,
-                        "custom operator '%s' must declare a Comparable argument type".formatted(operator));
+                        "custom operator '%s' must declare an argument type".formatted(operator));
+            }
+            if (descriptor.jpaPredicateFactory().isPresent()
+                    && !Comparable.class.isAssignableFrom(descriptor.argumentType().orElseThrow())) {
+                throw new SearchDefinitionValidationException(
+                        SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH,
+                        "custom operator '%s' must declare a Comparable argument type for the Perplexhub backend"
+                                .formatted(operator));
             }
         }
     }
@@ -88,13 +97,18 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
     private static RSQLCustomPredicate<?> customPredicate(
             RsqlOperatorDescriptor descriptor,
             RsqlJpaPredicateFactory factory) {
-        Class<? extends Comparable<?>> type = descriptor.argumentType().orElse(String.class);
+        Class<? extends Comparable<?>> type = comparableType(descriptor.argumentType().orElse(String.class));
         Function<RSQLCustomPredicateInput, Predicate> converter =
                 input -> factory.toPredicate(context(input, descriptor.operator()));
         return new RSQLCustomPredicate(
                 descriptor.comparisonOperator(),
                 type,
                 converter);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Comparable<?>> comparableType(Class<?> type) {
+        return (Class<? extends Comparable<?>>) type.asSubclass(Comparable.class);
     }
 
     private static RsqlJpaPredicateContext<?, ?, ?, ?, ?> context(RSQLCustomPredicateInput input, RsqlOperator operator) {

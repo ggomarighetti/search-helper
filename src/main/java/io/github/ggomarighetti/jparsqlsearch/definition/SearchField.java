@@ -13,7 +13,7 @@ import org.springframework.util.Assert;
  *
  * @param <T> exposed value type
  */
-public final class SearchField<T> {
+public final class SearchField<T> implements AutoCloseable {
     private final String selector;
     private final Optional<String> path;
     private final Class<T> type;
@@ -94,6 +94,12 @@ public final class SearchField<T> {
      */
     public SearchSorting sorting() {
         return sorting;
+    }
+
+    /** Releases validator resources owned by this field. */
+    @Override
+    public void close() {
+        filtering.close();
     }
 
     /**

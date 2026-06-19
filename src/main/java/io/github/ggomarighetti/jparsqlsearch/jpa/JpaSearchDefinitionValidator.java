@@ -2,6 +2,7 @@ package io.github.ggomarighetti.jparsqlsearch.jpa;
 
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition;
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchField;
+import io.github.ggomarighetti.jparsqlsearch.definition.SearchPath;
 import io.github.ggomarighetti.jparsqlsearch.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.jparsqlsearch.validation.SearchDefinitionValidator;
 import jakarta.persistence.EntityManagerFactory;
@@ -73,7 +74,7 @@ public final class JpaSearchDefinitionValidator implements SearchDefinitionValid
     }
 
     private Class<?> resolve(Class<?> entity, String selector, String capability, String path) {
-        String[] segments = path.split("\\.");
+        String[] segments = SearchPath.segments(path);
         Class<?> current = entity;
         for (int index = 0; index < segments.length; index++) {
             ManagedType<?> managedType = managedType(entity, selector, capability, path, current);

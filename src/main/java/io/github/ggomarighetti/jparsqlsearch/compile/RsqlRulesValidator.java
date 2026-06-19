@@ -95,6 +95,8 @@ final class RsqlRulesValidator {
             return;
         }
 
+        // Enforce request protection before selector-specific semantic checks so
+        // declared selectors cannot hide oversized arguments behind invalid input.
         protection.recordComparison(field, descriptor, arguments.size(), arguments);
         if (!isFilteringAllowed(field, comparison, descriptor, path, errors)) {
             return;

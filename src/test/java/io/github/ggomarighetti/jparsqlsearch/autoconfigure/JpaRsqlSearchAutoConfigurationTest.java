@@ -4,6 +4,7 @@ import io.github.ggomarighetti.jparsqlsearch.compile.SearchCompiler;
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition;
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinitionFactory;
 import io.github.ggomarighetti.jparsqlsearch.exception.SearchProtectionException;
+import io.github.ggomarighetti.jparsqlsearch.rsql.SearchRsqlEngine;
 import io.github.ggomarighetti.jparsqlsearch.unit.TestTypes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,30 @@ class JpaRsqlSearchAutoConfigurationTest {
     @Test
     void createsSearchCompilerBean() {
         contextRunner.run(context -> assertNotNull(context.getBean(SearchCompiler.class)));
+    }
+
+    @Test
+    void backsOffCompilerWhenDefaultRsqlEngineIsDisabled() {
+        contextRunner
+                .withPropertyValues("jpa.rsql.search.rsql.enabled=false")
+                .run(context -> {
+                    assertTrue(context.containsBean("searchDefinitionFactory"));
+                    assertFalse(context.containsBean("searchRsqlEngine"));
+                    assertFalse(context.containsBean("searchCompiler"));
+                });
+    }
+
+    @Test
+    void createsCompilerWithUserProvidedEngineWhenDefaultRsqlEngineIsDisabled() {
+        SearchRsqlEngine engine = SearchRsqlEngine.defaults();
+
+        contextRunner
+                .withPropertyValues("jpa.rsql.search.rsql.enabled=false")
+                .withBean(SearchRsqlEngine.class, () -> engine)
+                .run(context -> {
+                    assertTrue(context.containsBean("searchCompiler"));
+                    assertNotNull(context.getBean(SearchCompiler.class));
+                });
     }
 
     @Test

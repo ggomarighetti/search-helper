@@ -15,7 +15,7 @@ import org.springframework.core.convert.ConversionService;
  *
  * @param <T> converted argument type
  */
-public final class FilterOperator<T> {
+public final class FilterOperator<T> implements AutoCloseable {
     private final RsqlOperator operator;
     private final Class<T> argumentType;
     private final HibernateRuleValidator<ArrayList<T>> args;
@@ -113,6 +113,13 @@ public final class FilterOperator<T> {
             cause = cause.getCause();
         }
         return false;
+    }
+
+    /** Releases validator resources owned by this operator. */
+    @Override
+    public void close() {
+        args.close();
+        each.close();
     }
 
     /**

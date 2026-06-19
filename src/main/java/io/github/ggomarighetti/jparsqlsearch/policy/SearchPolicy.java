@@ -934,9 +934,9 @@ public final class SearchPolicy {
      * @param minSize minimum requested page size
      * @param maxSize maximum requested page size
      * @param maxOffset maximum accepted row offset
-     * @param allowUnpaged whether unpaged requests are allowed
-     * @param defaultUnpagedSize size used to bound an unpaged request
-     * @param maxUnpagedSize maximum size accepted for an unpaged request
+     * @param allowUnpaged whether unpaged requests are accepted and converted to a bounded first page
+     * @param defaultUnpagedSize page size used for converted unpaged requests
+     * @param maxUnpagedSize maximum configured size accepted for converted unpaged requests
      * @param page count-query limits
      * @param slice slice-query limits
      */
@@ -1070,9 +1070,9 @@ public final class SearchPolicy {
             }
 
             /**
-             * Enables or disables unpaged requests.
+             * Enables or disables bounded handling for unpaged requests.
              *
-             * @param allowUnpaged allowed state
+             * @param allowUnpaged whether unpaged requests are accepted and converted to a bounded first page
              * @return this builder
              */
             public Builder allowUnpaged(boolean allowUnpaged) {
@@ -1082,9 +1082,9 @@ public final class SearchPolicy {
             }
 
             /**
-             * Sets the size used to bound an unpaged request.
+             * Sets the page size used when an accepted unpaged request is converted to a bounded first page.
              *
-             * @param defaultUnpagedSize positive size
+             * @param defaultUnpagedSize positive page size
              * @return this builder
              */
             public Builder defaultUnpagedSize(int defaultUnpagedSize) {
@@ -1094,9 +1094,9 @@ public final class SearchPolicy {
             }
 
             /**
-             * Sets the size used to bound an unpaged request.
+             * Sets the page size used when an accepted unpaged request is converted to a bounded first page.
              *
-             * @param unpagedSize positive size
+             * @param unpagedSize positive page size
              * @return this builder
              */
             public Builder unpagedSize(int unpagedSize) {

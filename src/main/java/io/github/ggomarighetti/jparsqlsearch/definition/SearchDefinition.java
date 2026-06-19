@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
  *
  * @param <T> entity type compiled by this definition
  */
-public final class SearchDefinition<T> {
+public final class SearchDefinition<T> implements AutoCloseable {
     private static final String CUSTOMIZER_MUST_NOT_BE_NULL = "customizer must not be null";
 
     private final Class<T> entity;
@@ -190,6 +190,20 @@ public final class SearchDefinition<T> {
                 .filter(field -> field.sorting().enabled())
                 .forEach(field -> directions.put(field.selector(), field.sorting().directions()));
         return Collections.unmodifiableMap(directions);
+    }
+
+    /**
+     * Releases validator resources owned by this definition.
+     *
+     * <p>Most applications should keep definitions as long-lived singleton objects.
+     * Call this method only for definitions built dynamically and no longer used.
+     * Closing is idempotent.
+     */
+    @Override
+    public void close() {
+        fields.values().forEach(SearchField::close);
+        paging.close();
+        query.close();
     }
 
     /** First DSL step that requires the root entity type. */

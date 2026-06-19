@@ -32,6 +32,7 @@ class JpaRsqlSearchAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(SearchRsqlEngine.class)
     @ConditionalOnMissingBean
     public SearchCompiler searchCompiler(
             SearchRsqlEngine engine,

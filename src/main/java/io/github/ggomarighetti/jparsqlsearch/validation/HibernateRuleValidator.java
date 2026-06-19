@@ -17,7 +17,7 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
  *
  * @param <T> validated value type
  */
-public final class HibernateRuleValidator<T> {
+public final class HibernateRuleValidator<T> implements AutoCloseable {
     private static final Cleaner CLEANER = Cleaner.create();
     private static final HibernateRuleValidator<?> NONE = new HibernateRuleValidator<>(null, null);
 
@@ -91,6 +91,19 @@ public final class HibernateRuleValidator<T> {
                         .thenComparing(RuleViolation::constraint)
                         .thenComparing(RuleViolation::message))
                 .toList();
+    }
+
+    /**
+     * Releases the underlying validator factory, when this validator owns one.
+     *
+     * <p>Reusable static validators created with {@link #none()} do not own resources
+     * and closing them is a no-op. Closing is idempotent.
+     */
+    @Override
+    public void close() {
+        if (cleanable != null) {
+            cleanable.clean();
+        }
     }
 
     private static RuleViolation toViolation(ConstraintViolation<?> violation) {

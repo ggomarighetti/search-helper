@@ -2,6 +2,7 @@ package io.github.ggomarighetti.jparsqlsearch.compile;
 
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition;
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchField;
+import io.github.ggomarighetti.jparsqlsearch.definition.SearchPath;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
@@ -94,7 +95,7 @@ final class SearchSpecificationSorting {
 
     private static Path<?> path(Path<?> root, String path) {
         Path<?> current = root;
-        for (String segment : path.split("\\.")) {
+        for (String segment : SearchPath.segments(path)) {
             current = current.get(segment);
         }
         return current;

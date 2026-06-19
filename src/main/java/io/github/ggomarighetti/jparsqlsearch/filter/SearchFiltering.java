@@ -20,7 +20,7 @@ import org.springframework.core.convert.ConversionService;
  *
  * @param <T> exposed field type
  */
-public final class SearchFiltering<T> {
+public final class SearchFiltering<T> implements AutoCloseable {
     private static final String OPERATOR_MUST_NOT_BE_NULL = "operator must not be null";
 
     private static final SearchFiltering<?> DISABLED =
@@ -151,6 +151,12 @@ public final class SearchFiltering<T> {
             return false;
         }
         return operators.get(operator).accepts(arguments, conversionService);
+    }
+
+    /** Releases validator resources owned by enabled operator declarations. */
+    @Override
+    public void close() {
+        operators.values().forEach(FilterOperator::close);
     }
 
     /**

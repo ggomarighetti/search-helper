@@ -116,7 +116,11 @@ class JpaRsqlSearchProperties {
 
     /** RSQL parser and backend settings. */
     public static class Rsql {
-        /** Whether RSQL support and its auto-configuration are enabled. */
+        /**
+         * Whether the built-in RSQL engine and backend auto-configuration are enabled.
+         * When disabled, a SearchCompiler is auto-configured only if the application
+         * provides its own SearchRsqlEngine bean.
+         */
         private boolean enabled = true;
         /** Settings for the bundled Perplexhub JPA backend. */
         private final Perplexhub perplexhub = new Perplexhub();
@@ -478,11 +482,11 @@ class JpaRsqlSearchProperties {
         private int maxSize = SearchPolicy.defaults().paging().maxSize();
         /** Maximum accepted row offset. */
         private long maxOffset = SearchPolicy.defaults().paging().maxOffset();
-        /** Whether unpaged requests are allowed. */
+        /** Whether unpaged requests are accepted and converted to a bounded first page. */
         private boolean allowUnpaged = SearchPolicy.defaults().paging().allowUnpaged();
-        /** Size used to bound an accepted unpaged request. */
+        /** Page size used when an accepted unpaged request is converted to a bounded first page. */
         private int defaultUnpagedSize = SearchPolicy.defaults().paging().defaultUnpagedSize();
-        /** Maximum size accepted for an unpaged request. */
+        /** Maximum configured size accepted for converted unpaged requests. */
         private int maxUnpagedSize = SearchPolicy.defaults().paging().maxUnpagedSize();
 
         public Page getPage() {

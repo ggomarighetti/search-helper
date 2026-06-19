@@ -14,7 +14,7 @@ public final class RsqlOperatorDescriptor {
     private final RsqlOperator operator;
     private final Set<String> symbols;
     private final RsqlOperatorArity arity;
-    private final Class<? extends Comparable<?>> argumentType;
+    private final Class<?> argumentType;
     private final RsqlJpaPredicateFactory jpaPredicateFactory;
     private final boolean defaultJpaSupported;
 
@@ -22,7 +22,7 @@ public final class RsqlOperatorDescriptor {
             RsqlOperator operator,
             Set<String> symbols,
             RsqlOperatorArity arity,
-            Class<? extends Comparable<?>> argumentType,
+            Class<?> argumentType,
             RsqlJpaPredicateFactory jpaPredicateFactory,
             boolean defaultJpaSupported) {
         this.operator = Objects.requireNonNull(operator, "operator must not be null");
@@ -96,7 +96,7 @@ public final class RsqlOperatorDescriptor {
      *
      * @return explicit conversion type for custom execution
      */
-    public Optional<Class<? extends Comparable<?>>> argumentType() {
+    public Optional<Class<?>> argumentType() {
         return Optional.ofNullable(argumentType);
     }
 
@@ -132,7 +132,7 @@ public final class RsqlOperatorDescriptor {
         private final RsqlOperator operator;
         private final Set<String> symbols = new LinkedHashSet<>();
         private RsqlOperatorArity arity = RsqlOperatorArity.exact(1);
-        private Class<? extends Comparable<?>> argumentType;
+        private Class<?> argumentType;
         private RsqlJpaPredicateFactory jpaPredicateFactory;
         private boolean defaultJpaSupported;
 
@@ -190,10 +190,10 @@ public final class RsqlOperatorDescriptor {
         /**
          * Configures the conversion type used by a custom predicate.
          *
-         * @param argumentType comparable conversion type
+         * @param argumentType conversion type
          * @return this builder
          */
-        public Builder argumentType(Class<? extends Comparable<?>> argumentType) {
+        public Builder argumentType(Class<?> argumentType) {
             this.argumentType = Objects.requireNonNull(argumentType, "argumentType must not be null");
             return this;
         }

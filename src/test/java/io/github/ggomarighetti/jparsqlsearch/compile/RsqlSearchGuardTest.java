@@ -692,6 +692,64 @@ class RsqlSearchGuardTest {
     }
 
     @Test
+    void appliesProtectionBeforeDisallowedOperatorErrorsForDeclaredSelectors() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .filter(filter -> filter.maxArgumentLength(5)));
+
+        SearchProtectionException exception = assertThrows(
+                SearchProtectionException.class,
+                () -> guard.specification("taxId!=20123456789", definition));
+
+        assertProtectionRule(exception, "filter.max-argument-length");
+    }
+
+    @Test
+    void appliesProtectionBeforeArgumentValidationErrors() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .filter(filter -> filter.maxArgumentLength(2)));
+
+        SearchProtectionException exception = assertThrows(
+                SearchProtectionException.class,
+                () -> guard.specification("taxId==abc", definition));
+
+        assertProtectionRule(exception, "filter.max-argument-length");
+    }
+
+    @Test
+    void appliesProtectionBeforeInvalidArityErrors() {
+        RsqlOperator pair = RsqlOperator.of("PAIR");
+        RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(pair)
+                .symbol("=pair=")
+                .arity(RsqlOperatorArity.exact(2))
+                .argumentType(String.class)
+                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
+                .build();
+        SearchPolicy policy = SearchPolicy.builder()
+                .filter(filter -> filter.maxArgumentLength(5))
+                .build();
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder(policy).entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class)
+                        .filterable(filter -> filter.allow(pair, String.class, operator -> {})))
+                .build();
+        RsqlRulesValidator validator = new RsqlRulesValidator(
+                definition,
+                ApplicationConversionService.getSharedInstance(),
+                policy.rsql(),
+                new SearchProtectionContext(policy, SearchCompilationMode.PAGE),
+                new RsqlOperatorRegistry(List.of(descriptor)));
+        RsqlAst comparison = astUnchecked(new ComparisonNode(
+                new ComparisonOperator("=pair=", true),
+                "email",
+                List.of("person@example.com")));
+
+        SearchProtectionException exception = assertThrows(
+                SearchProtectionException.class,
+                () -> validator.validate(comparison));
+
+        assertProtectionRule(exception, "filter.max-argument-length");
+    }
+
+    @Test
     void unrelatedLocalOverridePreservesGlobalArgumentLimit() {
         SearchPolicy globalPolicy = SearchPolicy.builder()
                 .filter(filter -> filter.maxArgumentsPerComparison(10))
@@ -773,6 +831,14 @@ class RsqlSearchGuardTest {
         Constructor<RsqlAst> constructor = RsqlAst.class.getDeclaredConstructor(Node.class, List.class);
         constructor.setAccessible(true);
         return constructor.newInstance(node, List.of());
+    }
+
+    private static RsqlAst astUnchecked(Node node) {
+        try {
+            return ast(node);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
+        }
     }
 
     private static final class UnsupportedNode implements Node {

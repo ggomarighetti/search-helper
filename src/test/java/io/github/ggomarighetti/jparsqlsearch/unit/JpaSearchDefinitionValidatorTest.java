@@ -53,6 +53,27 @@ class JpaSearchDefinitionValidatorTest {
     }
 
     @Test
+    void rejectsTrailingEmptyPathSegmentsAgainstMetamodel() throws Exception {
+        Method resolve = JpaSearchDefinitionValidator.class.getDeclaredMethod(
+                "resolve",
+                Class.class,
+                String.class,
+                String.class,
+                String.class);
+        resolve.setAccessible(true);
+        ManagedType<?> product = managedType(Map.of("email", attribute(String.class, false)));
+        JpaSearchDefinitionValidator validator = validator(Map.of(TestTypes.Product.class, product));
+
+        InvocationTargetException exception = thrownBy(
+                InvocationTargetException.class,
+                () -> resolve.invoke(validator, TestTypes.Product.class, "email", "filtering", "email."));
+
+        assertEquals(
+                SearchDefinitionValidationException.JPA_PATH_UNRESOLVED,
+                ((SearchDefinitionValidationException) exception.getCause()).code());
+    }
+
+    @Test
     void rejectsCollectionAttributeThatIsNotPluralAttribute() {
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder()
                 .entity(TestTypes.Product.class)

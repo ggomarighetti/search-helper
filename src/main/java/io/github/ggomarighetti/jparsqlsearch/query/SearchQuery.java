@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
  *
  * @param <T> entity type targeted by the generated specification
  */
-public final class SearchQuery<T> {
+public final class SearchQuery<T> implements AutoCloseable {
     private static final SearchQuery<?> DISABLED =
             new SearchQuery<>(false, HibernateRuleValidator.none(), false, null);
 
@@ -104,6 +104,12 @@ public final class SearchQuery<T> {
             throw new IllegalStateException("query is disabled");
         }
         return specification.toSpecification(query);
+    }
+
+    /** Releases validator resources owned by this query declaration. */
+    @Override
+    public void close() {
+        validator.close();
     }
 
     /**

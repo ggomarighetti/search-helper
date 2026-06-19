@@ -202,6 +202,13 @@ SearchDefinition<Product> definition = searchDefinitionFactory.builder()
         .build();
 ```
 
+Definitions are designed to be reused. Prefer static fields, singleton beans, or
+other long-lived holders instead of rebuilding the same definition for every
+request. Definitions that are built dynamically and then discarded implement
+`AutoCloseable`; call `close()` after the last use to release Hibernate
+Validator factories deterministically. Long-lived definitions can simply stay
+open for the lifetime of the application.
+
 Declare public fields inside `.fields(...)`. A field starts as metadata only;
 filtering and sorting are disabled until enabled explicitly.
 
@@ -251,7 +258,9 @@ fields.add("birthDate", LocalDate.class)
 ```
 
 Definition paths are checked against Java properties while the DSL is built and,
-in JPA applications, against the JPA metamodel when first compiled.
+in JPA applications, against the JPA metamodel when first compiled. Collection
+element types can be resolved from concrete generic supertypes and bounded type
+variables, such as `List<T extends Line>`.
 
 ### Filtering
 
@@ -527,6 +536,19 @@ of 100 with a 5000-row offset cap, unpaged requests are disabled, sort orders
 are capped at 3, to-many sorting is rejected, slice compilation is enabled, and
 definition paths are capped at 3 segments.
 
+When unpaged requests are enabled with `jpa.rsql.search.paging.allow-unpaged`
+or a per-definition limit override, the compiler still does not return an
+unbounded `Pageable`. It records the original unpaged input for protection
+checks, translates allowed sort aliases, and returns `PageRequest.of(0,
+defaultUnpagedSize, translatedSort)`. Use
+`jpa.rsql.search.paging.default-unpaged-size` to choose that bounded page size.
+
+Setting `jpa.rsql.search.rsql.enabled=false` disables the built-in RSQL engine,
+Perplexhub backend, and related RSQL infrastructure. In that mode the
+auto-configuration still creates `SearchDefinitionFactory`, but it creates
+`SearchCompiler` only when the application provides its own `SearchRsqlEngine`
+bean.
+
 Per-use case `.limits(...)` overlays remain useful when one endpoint needs a
 tighter profile than the global defaults:
 
@@ -558,6 +580,13 @@ argument index, validation path, message, message template, and constraint.
 `RuleViolation` is a serializable view of a Jakarta Bean Validation violation:
 it includes path, message, template, and constraint type, but intentionally omits
 the invalid value.
+
+Protection limits are intentionally allowed to win over some semantic RSQL
+errors. After an operator is registered and a selector is declared, the compiler
+records comparison limits before selector-specific operator checks and argument
+conversion/validation. For oversized or adversarial input, callers may therefore
+receive `SearchProtectionException` instead of a more specific
+`RsqlValidationError` such as operator-not-allowed or argument-rule-violation.
 
 That makes custom rules declared with `SizeDef`, `PatternDef`, `MaxDef`, and
 other Hibernate Validator definitions behave like normal DTO validation from an
@@ -627,6 +656,11 @@ The everyday API is intentionally small, but the RSQL layer remains extensible.
 | `ConversionService` / `Converter<String, T>` | Add application-specific value conversion |
 | `jpa.rsql.search.rsql.perplexhub.*` | Configure the bundled Perplexhub backend |
 
+`SearchRsqlEngine.builder()` starts with the built-in operator dialect. For a
+strictly custom dialect, call `.withoutDefaultOperators()` before adding custom
+`RsqlOperatorDescriptor` instances. In Spring Boot, a `SearchRsqlEngineCustomizer`
+can do the same for the auto-configured engine.
+
 ### Perplexhub Backend
 
 The default backend is `PerplexhubRsqlBackendAdapter`. It wraps Perplexhub's
@@ -651,6 +685,12 @@ For a custom operator executed by the default backend, always declare:
 - an arity;
 - an `argumentType(...)` compatible with `Comparable`;
 - a `jpaPredicate(...)` implementation.
+
+`RsqlOperatorDescriptor.argumentType(...)` accepts any Java type so custom
+backends can use application-specific value objects. The bundled Perplexhub
+backend is stricter because `RSQLCustomPredicate` requires a `Comparable`
+argument type; non-comparable argument types are supported only with a backend
+that can execute them.
 
 The predicate receives an `RsqlJpaPredicateContext` with the
 `CriteriaBuilder`, resolved JPA `Path`, metamodel `Attribute`, converted
@@ -728,7 +768,7 @@ Perplexhub backend, a registered operator that is not built in must have a JPA
 predicate; otherwise the definition fails with
 `RSQL_OPERATOR_NOT_EXECUTABLE`. If `.jpaPredicate(...)` is present,
 `.argumentType(...)` is required so the backend can create the matching
-Perplexhub custom predicate.
+Perplexhub custom predicate, and that type must implement `Comparable`.
 
 ### Custom Conversion
 
