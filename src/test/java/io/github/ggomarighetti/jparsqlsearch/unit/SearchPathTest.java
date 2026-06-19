@@ -9,14 +9,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import java.math.BigDecimal;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +29,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static io.github.ggomarighetti.jparsqlsearch.unit.ExceptionAssertions.thrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SearchPathTest {
@@ -91,11 +98,35 @@ class SearchPathTest {
                 "concreteLines.sku",
                 String.class,
                 DEEP_PATHS);
+        SearchPath.Metadata nested = SearchPath.metadata(
+                ConcreteForwardingGenericRoot.class,
+                "sku",
+                "concreteLines.sku",
+                String.class,
+                DEEP_PATHS);
+        SearchPath.Metadata interfaceResolved = SearchPath.metadata(
+                InterfaceGenericRoot.class,
+                "sku",
+                "interfaceLines.sku",
+                String.class,
+                DEEP_PATHS);
+        SearchPath.Metadata wildcardConcrete = SearchPath.metadata(
+                ConcreteWildcardGenericRoot.class,
+                "sku",
+                "wildcardConcreteLines.sku",
+                String.class,
+                DEEP_PATHS);
 
         assertEquals(String.class, bounded.type());
         assertTrue(bounded.traversesCollection());
         assertEquals(String.class, concrete.type());
         assertTrue(concrete.traversesCollection());
+        assertEquals(String.class, nested.type());
+        assertTrue(nested.traversesCollection());
+        assertEquals(String.class, interfaceResolved.type());
+        assertTrue(interfaceResolved.traversesCollection());
+        assertEquals(String.class, wildcardConcrete.type());
+        assertTrue(wildcardConcrete.traversesCollection());
     }
 
     @Test
@@ -123,15 +154,18 @@ class SearchPathTest {
 
     @Test
     void rejectsCollectionPathsWhenElementTypeCannotResolveToAPropertyOwner() {
-        thrownBy(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "nestedLines.sku", String.class, DEEP_PATHS));
-        thrownBy(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "arrayLines.sku", String.class, DEEP_PATHS));
-        thrownBy(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(GenericRoot.class, "sku", "lineArrays.sku", String.class, DEEP_PATHS));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(RawIterableRoot.class, "sku", "rawLines.sku", String.class, DEEP_PATHS));
     }
 
     @Test
@@ -207,41 +241,87 @@ class SearchPathTest {
     }
 
     @Test
-    void privateGenericHelpersHandleExoticReflectiveTypes() throws ReflectiveOperationException {
-        Method collectionElementType = SearchPath.class.getDeclaredMethod(
+    void privateGenericHelpersHandleGenericArgumentFallbacks() throws ReflectiveOperationException {
+        Method collectionElementType = privateMethod(
                 "collectionElementType",
                 Class.class,
-                Type.class);
-        collectionElementType.setAccessible(true);
-        Method genericArgumentFromType = SearchPath.class.getDeclaredMethod(
+                Type.class,
+                Map.class);
+        Method genericArgument = privateMethod(
                 "genericArgument",
                 Type.class,
                 Class.class,
-                int.class);
-        genericArgumentFromType.setAccessible(true);
-        Method genericArgumentFromClass = SearchPath.class.getDeclaredMethod(
+                int.class,
+                Map.class);
+        Method genericArgumentClass = privateMethod(
                 "genericArgument",
                 Class.class,
                 Class.class,
-                int.class);
-        genericArgumentFromClass.setAccessible(true);
-        Method classFromType = SearchPath.class.getDeclaredMethod("classFromType", Type.class);
-        classFromType.setAccessible(true);
-        Method rawClass = SearchPath.class.getDeclaredMethod("rawClass", Type.class);
-        rawClass.setAccessible(true);
+                int.class,
+                Map.class);
 
-        assertEquals(String.class, collectionElementType.invoke(null, Object.class, genericArray(String.class)));
-        assertNull(collectionElementType.invoke(null, String.class, String.class));
-        assertEquals(Line.class, genericArgumentFromType.invoke(null, parameterized(LineBag.class), Iterable.class, 0));
-        assertNull(genericArgumentFromType.invoke(null, parameterized(new UnknownType()), Iterable.class, 0));
-        assertNull(genericArgumentFromType.invoke(null, parameterized(String.class), Iterable.class, 0));
-        assertNull(genericArgumentFromClass.invoke(null, null, Iterable.class, 0));
-        assertNull(genericArgumentFromClass.invoke(null, Object.class, Iterable.class, 0));
-        assertEquals(String[].class, classFromType.invoke(null, genericArray(String.class)));
-        assertNull(classFromType.invoke(null, wildcardWithoutUpperBounds()));
-        assertEquals(Line.class, classFromType.invoke(null, GenericRoot.class.getTypeParameters()[0]));
-        assertNull(classFromType.invoke(null, new UnknownType()));
-        assertEquals(List.class, rawClass.invoke(null, parameterized(List.class, String.class)));
+        assertEquals(String.class, collectionElementType.invoke(null, Object.class, genericArray(String.class), Map.of()));
+        assertNull(collectionElementType.invoke(null, String.class, String.class, Map.of()));
+        assertEquals(Line.class, genericArgument.invoke(null, parameterized(LineBag.class), Iterable.class, 0, Map.of()));
+        assertNull(genericArgument.invoke(null, parameterized(new UnknownType(), Line.class), Iterable.class, 0, Map.of()));
+        assertEquals(Object.class, genericArgument.invoke(null, parameterized(List.class), Iterable.class, 0, Map.of()));
+        assertNull(genericArgument.invoke(null, parameterized(String.class, Line.class), Iterable.class, 0, Map.of()));
+        assertNull(genericArgumentClass.invoke(null, Object.class, Iterable.class, 0, Map.of()));
+        assertNull(genericArgumentClass.invoke(null, String.class, Iterable.class, 0, Map.of()));
+        assertNull(genericArgumentClass.invoke(null, NonResolvingInterfaceRoot.class, Iterable.class, 0, Map.of()));
+    }
+
+    @Test
+    void privateGenericHelpersHandleUnresolvedReflectiveTypes() throws ReflectiveOperationException {
+        Method classFromType = privateMethod("classFromType", Type.class, Map.class);
+        Method typeVariables = privateMethod("typeVariables", Class.class, Class.class);
+        Method resolveTypeVariables = privateMethod("resolveTypeVariables", Type.class, Class.class, Map.class);
+        Method recordTypeVariables = privateMethod("recordTypeVariables", Type.class, Class.class, Map.class);
+
+        assertNull(classFromType.invoke(null, new UnknownType(), Map.of()));
+        assertNull(classFromType.invoke(null, genericArray(new UnknownType()), Map.of()));
+        assertNull(classFromType.invoke(null, wildcard(new Type[0], new Type[0]), Map.of()));
+        assertNull(classFromType.invoke(null, new EmptyBoundsVariable(), Map.of()));
+        assertEquals(Map.of(), typeVariables.invoke(null, null, Line.class));
+        assertEquals(Map.of(), typeVariables.invoke(null, Line.class, null));
+        assertEquals(Map.of(), typeVariables.invoke(null, String.class, Line.class));
+        recordTypeVariables.invoke(null, parameterized(GenericBase.class), GenericBase.class, new LinkedHashMap<>());
+        recordTypeVariables.invoke(null, parameterized(Line.class, String.class), Line.class, new LinkedHashMap<>());
+
+        Map<TypeVariable<?>, Type> interfaceMappings = new LinkedHashMap<>();
+        assertFalse((Boolean) resolveTypeVariables.invoke(null, new UnknownType(), Object.class, interfaceMappings));
+        assertTrue((Boolean) resolveTypeVariables.invoke(
+                null,
+                InterfaceGenericRoot.class,
+                GenericLineProvider.class,
+                interfaceMappings));
+        assertEquals(SpecialLine.class, interfaceMappings.get(GenericLineProvider.class.getTypeParameters()[0]));
+    }
+
+    @Test
+    void privateGenericHelpersSubstituteMappedReflectiveTypes() throws ReflectiveOperationException {
+        Method classFromType = privateMethod("classFromType", Type.class, Map.class);
+        Method substituteType = privateMethod("substituteType", Type.class, Map.class);
+        Method rawClass = privateMethod("rawClass", Type.class);
+        TypeVariable<Class<GenericRoot>> variable = GenericRoot.class.getTypeParameters()[0];
+        Map<TypeVariable<?>, Type> stringMapping = Map.of(variable, String.class);
+
+        assertEquals(String[].class, classFromType.invoke(null, genericArray(variable), stringMapping));
+        assertEquals(
+                List[].class,
+                classFromType.invoke(null, genericArray(variable), Map.of(variable, parameterized(List.class, String.class))));
+        assertEquals(String.class, classFromType.invoke(null, wildcard(variable), stringMapping));
+
+        Type substituted = (Type) substituteType.invoke(null, parameterized(List.class, variable), stringMapping);
+        assertEquals(List.class, rawClass.invoke(null, substituted));
+        assertNull(((ParameterizedType) substituted).getOwnerType());
+        assertSame(variable, substituteType.invoke(null, variable, Map.of()));
+        assertSame(variable, substituteType.invoke(null, variable, Map.of(variable, variable)));
+        WildcardType unchangedWildcard = wildcard(String.class);
+        assertSame(unchangedWildcard, substituteType.invoke(null, unchangedWildcard, Map.of()));
+        WildcardType lowerBoundedWildcard = wildcard(new Type[] {Object.class}, new Type[] {variable});
+        WildcardType substitutedWildcard = (WildcardType) substituteType.invoke(null, lowerBoundedWildcard, stringMapping);
+        assertEquals(String.class, substitutedWildcard.getLowerBounds()[0]);
     }
 
     private static void assertCollectionPath(String path) {
@@ -259,12 +339,14 @@ class SearchPathTest {
         assertEquals(toManyPaths, topology.toManyPaths());
     }
 
-    private static GenericArrayType genericArray(Type componentType) {
-        return () -> componentType;
+    private static Method privateMethod(String name, Class<?>... parameterTypes) throws ReflectiveOperationException {
+        Method method = SearchPath.class.getDeclaredMethod(name, parameterTypes);
+        method.setAccessible(true);
+        return method;
     }
 
-    private static ParameterizedType parameterized(Class<?> rawType, Type... arguments) {
-        return parameterized((Type) rawType, arguments);
+    private static GenericArrayType genericArray(Type componentType) {
+        return () -> componentType;
     }
 
     private static ParameterizedType parameterized(Type rawType, Type... arguments) {
@@ -286,21 +368,22 @@ class SearchPathTest {
         };
     }
 
-    private static WildcardType wildcardWithoutUpperBounds() {
+    private static WildcardType wildcard(Type upperBound) {
+        return wildcard(new Type[] {upperBound}, new Type[0]);
+    }
+
+    private static WildcardType wildcard(Type[] upperBounds, Type[] lowerBounds) {
         return new WildcardType() {
             @Override
             public Type[] getUpperBounds() {
-                return new Type[0];
+                return upperBounds;
             }
 
             @Override
             public Type[] getLowerBounds() {
-                return new Type[0];
+                return lowerBounds;
             }
         };
-    }
-
-    private static final class UnknownType implements Type {
     }
 
     private static final class FieldOnlyRoot {
@@ -395,6 +478,53 @@ class SearchPathTest {
         }
     }
 
+    private static final class RawIterableRoot {
+        @SuppressWarnings("rawtypes")
+        public Iterable getRawLines() {
+            return List.of();
+        }
+    }
+
+    private static final class UnknownType implements Type {
+    }
+
+    private static final class EmptyBoundsVariable implements TypeVariable<GenericDeclaration> {
+        @Override
+        public Type[] getBounds() {
+            return new Type[0];
+        }
+
+        @Override
+        public GenericDeclaration getGenericDeclaration() {
+            return GenericRoot.class;
+        }
+
+        @Override
+        public String getName() {
+            return "T";
+        }
+
+        @Override
+        public AnnotatedType[] getAnnotatedBounds() {
+            return new AnnotatedType[0];
+        }
+
+        @Override
+        public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+            return null;
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            return new Annotation[0];
+        }
+
+        @Override
+        public Annotation[] getDeclaredAnnotations() {
+            return new Annotation[0];
+        }
+    }
+
     private static class GenericBase<T extends Line> {
         public List<T> getConcreteLines() {
             return List.of();
@@ -402,6 +532,30 @@ class SearchPathTest {
     }
 
     private static final class ConcreteGenericRoot extends GenericBase<SpecialLine> {
+    }
+
+    private static class ForwardingGenericRoot<T extends Line> extends GenericBase<T> {
+    }
+
+    private static final class ConcreteForwardingGenericRoot extends ForwardingGenericRoot<SpecialLine> {
+    }
+
+    private interface GenericLineProvider<T extends Line> {
+        default List<T> getInterfaceLines() {
+            return List.of();
+        }
+    }
+
+    private static final class InterfaceGenericRoot implements GenericLineProvider<SpecialLine> {
+    }
+
+    private static class WildcardGenericBase<T extends Line> {
+        public List<? extends T> getWildcardConcreteLines() {
+            return List.of();
+        }
+    }
+
+    private static final class ConcreteWildcardGenericRoot extends WildcardGenericBase<SpecialLine> {
     }
 
     private static final class SpecialLine extends Line {
@@ -420,6 +574,13 @@ class SearchPathTest {
         @Override
         public Iterator<Line> iterator() {
             return List.<Line>of().iterator();
+        }
+    }
+
+    private static final class NonResolvingInterfaceRoot implements Runnable {
+        @Override
+        public void run() {
+            // This fixture only needs the declared Runnable interface for traversal.
         }
     }
 

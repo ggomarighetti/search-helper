@@ -716,7 +716,7 @@ class RsqlSearchGuardTest {
     }
 
     @Test
-    void appliesProtectionBeforeInvalidArityErrors() throws ReflectiveOperationException {
+    void appliesProtectionBeforeInvalidArityErrors() {
         RsqlOperator pair = RsqlOperator.of("PAIR");
         RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(pair)
                 .symbol("=pair=")
@@ -737,13 +737,14 @@ class RsqlSearchGuardTest {
                 policy.rsql(),
                 new SearchProtectionContext(policy, SearchCompilationMode.PAGE),
                 new RsqlOperatorRegistry(List.of(descriptor)));
+        RsqlAst comparison = astUnchecked(new ComparisonNode(
+                new ComparisonOperator("=pair=", true),
+                "email",
+                List.of("person@example.com")));
 
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> validator.validate(ast(new ComparisonNode(
-                        new ComparisonOperator("=pair=", true),
-                        "email",
-                        List.of("person@example.com")))));
+                () -> validator.validate(comparison));
 
         assertProtectionRule(exception, "filter.max-argument-length");
     }
@@ -830,6 +831,14 @@ class RsqlSearchGuardTest {
         Constructor<RsqlAst> constructor = RsqlAst.class.getDeclaredConstructor(Node.class, List.class);
         constructor.setAccessible(true);
         return constructor.newInstance(node, List.of());
+    }
+
+    private static RsqlAst astUnchecked(Node node) {
+        try {
+            return ast(node);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
+        }
     }
 
     private static final class UnsupportedNode implements Node {

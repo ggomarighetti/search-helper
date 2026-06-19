@@ -18,9 +18,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -266,10 +268,6 @@ public final class SearchPath {
                         typeVariables(owner, field.getDeclaringClass()));
     }
 
-    private static Class<?> collectionElementType(Class<?> type, Type genericType) {
-        return collectionElementType(type, genericType, Map.of());
-    }
-
     private static Class<?> collectionElementType(
             Class<?> type,
             Type genericType,
@@ -287,10 +285,6 @@ public final class SearchPath {
             return genericArgument(genericType, Iterable.class, 0, typeVariables);
         }
         return null;
-    }
-
-    private static Class<?> genericArgument(Type type, Class<?> target, int index) {
-        return genericArgument(type, target, index, Map.of());
     }
 
     private static Class<?> genericArgument(
@@ -312,10 +306,6 @@ public final class SearchPath {
         return genericArgument(rawClass(type), target, index, typeVariables);
     }
 
-    private static Class<?> genericArgument(Class<?> type, Class<?> target, int index) {
-        return genericArgument(type, target, index, Map.of());
-    }
-
     private static Class<?> genericArgument(
             Class<?> type,
             Class<?> target,
@@ -331,10 +321,6 @@ public final class SearchPath {
             }
         }
         return genericArgument(type.getGenericSuperclass(), target, index, typeVariables);
-    }
-
-    private static Class<?> classFromType(Type type) {
-        return classFromType(type, Map.of());
     }
 
     private static Class<?> classFromType(Type type, Map<TypeVariable<?>, Type> typeVariables) {
@@ -413,56 +399,68 @@ public final class SearchPath {
 
     private static Type substituteType(Type type, Map<TypeVariable<?>, Type> mappings) {
         if (type instanceof TypeVariable<?> variable) {
-            Type mapped = mappings.get(variable);
-            return mapped == null || mapped.equals(variable) ? variable : substituteType(mapped, mappings);
+            return substituteTypeVariable(variable, mappings);
         }
         if (type instanceof ParameterizedType parameterizedType) {
-            Type[] arguments = parameterizedType.getActualTypeArguments();
-            Type[] substituted = new Type[arguments.length];
-            boolean changed = false;
-            for (int index = 0; index < arguments.length; index++) {
-                substituted[index] = substituteType(arguments[index], mappings);
-                changed = changed || !substituted[index].equals(arguments[index]);
-            }
-            if (!changed) {
-                return type;
-            }
-            return new ResolvedParameterizedType(
-                    parameterizedType.getOwnerType(),
-                    parameterizedType.getRawType(),
-                    substituted);
+            return substituteParameterizedType(parameterizedType, mappings);
         }
         if (type instanceof GenericArrayType genericArrayType) {
-            Type originalComponent = genericArrayType.getGenericComponentType();
-            Type component = substituteType(originalComponent, mappings);
-            if (component.equals(originalComponent)) {
-                return type;
-            }
-            if (component instanceof Class<?> componentClass) {
-                return Array.newInstance(componentClass, 0).getClass();
-            }
-            return new ResolvedGenericArrayType(component);
+            return substituteGenericArrayType(genericArrayType, mappings);
         }
         if (type instanceof WildcardType wildcardType) {
-            Type[] originalUpperBounds = wildcardType.getUpperBounds();
-            Type[] originalLowerBounds = wildcardType.getLowerBounds();
-            Type[] upperBounds = originalUpperBounds.clone();
-            Type[] lowerBounds = originalLowerBounds.clone();
-            boolean changed = false;
-            for (int index = 0; index < upperBounds.length; index++) {
-                upperBounds[index] = substituteType(upperBounds[index], mappings);
-                changed = changed || !upperBounds[index].equals(originalUpperBounds[index]);
-            }
-            for (int index = 0; index < lowerBounds.length; index++) {
-                lowerBounds[index] = substituteType(lowerBounds[index], mappings);
-                changed = changed || !lowerBounds[index].equals(originalLowerBounds[index]);
-            }
-            if (!changed) {
-                return type;
-            }
-            return new ResolvedWildcardType(upperBounds, lowerBounds);
+            return substituteWildcardType(wildcardType, mappings);
         }
         return type;
+    }
+
+    private static Type substituteTypeVariable(TypeVariable<?> variable, Map<TypeVariable<?>, Type> mappings) {
+        Type mapped = mappings.get(variable);
+        return mapped == null || mapped.equals(variable) ? variable : substituteType(mapped, mappings);
+    }
+
+    private static Type substituteParameterizedType(
+            ParameterizedType type,
+            Map<TypeVariable<?>, Type> mappings) {
+        Type[] arguments = type.getActualTypeArguments();
+        Type[] substituted = substituteTypes(arguments, mappings);
+        if (Arrays.equals(arguments, substituted)) {
+            return type;
+        }
+        return new ResolvedParameterizedType(
+                type.getOwnerType(),
+                type.getRawType(),
+                substituted);
+    }
+
+    private static Type substituteGenericArrayType(
+            GenericArrayType type,
+            Map<TypeVariable<?>, Type> mappings) {
+        Type originalComponent = type.getGenericComponentType();
+        Type component = substituteType(originalComponent, mappings);
+        if (component.equals(originalComponent)) {
+            return type;
+        }
+        if (component instanceof Class<?> componentClass) {
+            return Array.newInstance(componentClass, 0).getClass();
+        }
+        return new ResolvedGenericArrayType(component);
+    }
+
+    private static Type substituteWildcardType(WildcardType type, Map<TypeVariable<?>, Type> mappings) {
+        Type[] upperBounds = substituteTypes(type.getUpperBounds(), mappings);
+        Type[] lowerBounds = substituteTypes(type.getLowerBounds(), mappings);
+        if (Arrays.equals(type.getUpperBounds(), upperBounds) && Arrays.equals(type.getLowerBounds(), lowerBounds)) {
+            return type;
+        }
+        return new ResolvedWildcardType(upperBounds, lowerBounds);
+    }
+
+    private static Type[] substituteTypes(Type[] types, Map<TypeVariable<?>, Type> mappings) {
+        Type[] substituted = types.clone();
+        for (int index = 0; index < substituted.length; index++) {
+            substituted[index] = substituteType(substituted[index], mappings);
+        }
+        return substituted;
     }
 
     private static Class<?> rawClass(Type type) {
@@ -499,11 +497,15 @@ public final class SearchPath {
         }
     }
 
-    private record ResolvedParameterizedType(Type ownerType, Type rawType, Type[] actualTypeArguments)
+    private record ResolvedParameterizedType(Type ownerType, Type rawType, List<Type> actualTypeArguments)
             implements ParameterizedType {
+        private ResolvedParameterizedType(Type ownerType, Type rawType, Type[] actualTypeArguments) {
+            this(ownerType, rawType, List.of(actualTypeArguments));
+        }
+
         @Override
         public Type[] getActualTypeArguments() {
-            return actualTypeArguments.clone();
+            return actualTypeArguments.toArray(Type[]::new);
         }
 
         @Override
@@ -524,15 +526,19 @@ public final class SearchPath {
         }
     }
 
-    private record ResolvedWildcardType(Type[] upperBounds, Type[] lowerBounds) implements WildcardType {
+    private record ResolvedWildcardType(List<Type> upperBounds, List<Type> lowerBounds) implements WildcardType {
+        private ResolvedWildcardType(Type[] upperBounds, Type[] lowerBounds) {
+            this(List.of(upperBounds), List.of(lowerBounds));
+        }
+
         @Override
         public Type[] getUpperBounds() {
-            return upperBounds.clone();
+            return upperBounds.toArray(Type[]::new);
         }
 
         @Override
         public Type[] getLowerBounds() {
-            return lowerBounds.clone();
+            return lowerBounds.toArray(Type[]::new);
         }
     }
 

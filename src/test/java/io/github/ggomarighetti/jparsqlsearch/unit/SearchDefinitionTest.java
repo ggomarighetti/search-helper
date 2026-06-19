@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static io.github.ggomarighetti.jparsqlsearch.unit.ExceptionAssertions.thrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -59,24 +60,9 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsMalformedFieldFilteringAndSortingPaths() {
-        thrownBy(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("email", String.class)
-                                .path("email.")
-                                .filterable(filter -> filter.allow(EQUAL)))
-                        .build());
-        thrownBy(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("email", String.class)
-                                .filterable(filter -> filter
-                                        .path(".email")
-                                        .allow(EQUAL)))
-                        .build());
-        thrownBy(IllegalArgumentException.class, () ->
-                SearchDefinition.builder().entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("email", String.class)
-                                .sortable(sort -> sort.path("email.")))
-                        .build());
+        assertThrows(IllegalArgumentException.class, SearchDefinitionTest::buildFieldWithMalformedDefaultPath);
+        assertThrows(IllegalArgumentException.class, SearchDefinitionTest::buildFieldWithMalformedFilteringPath);
+        assertThrows(IllegalArgumentException.class, SearchDefinitionTest::buildFieldWithMalformedSortingPath);
     }
 
     @Test
@@ -713,6 +699,30 @@ class SearchDefinitionTest {
         builder.fields(fields -> fields.add("expiresAt", java.time.Instant.class)
                 .subtype(String.class)
                 .filterable(filter -> filter.allow(EQUAL)));
+    }
+
+    private static void buildFieldWithMalformedDefaultPath() {
+        SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class)
+                        .path("email.")
+                        .filterable(filter -> filter.allow(EQUAL)))
+                .build();
+    }
+
+    private static void buildFieldWithMalformedFilteringPath() {
+        SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class)
+                        .filterable(filter -> filter
+                                .path(".email")
+                                .allow(EQUAL)))
+                .build();
+    }
+
+    private static void buildFieldWithMalformedSortingPath() {
+        SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class)
+                        .sortable(sort -> sort.path("email.")))
+                .build();
     }
 
     private static void declareDuplicateQuery(
