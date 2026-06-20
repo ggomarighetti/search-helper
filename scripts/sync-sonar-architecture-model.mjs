@@ -21,7 +21,7 @@ if (!token) {
   throw new Error("SONAR_TOKEN is required to synchronize the architecture model.");
 }
 
-const mainBranchId = await findMainBranchId();
+const projectId = await findProjectId();
 const authorization = `Basic ${Buffer.from(`${token}:`).toString("base64")}`;
 const commonHeaders = {
   accept: "application/json",
@@ -29,7 +29,7 @@ const commonHeaders = {
   "content-type": "application/json",
 };
 const models = await sonarRequest(
-  `https://api.sonarcloud.io/architecture/models?projectId=${encodeURIComponent(mainBranchId)}`,
+  `https://api.sonarcloud.io/architecture/models?projectId=${encodeURIComponent(projectId)}`,
   { headers: commonHeaders },
 );
 
@@ -38,7 +38,7 @@ if (models.length === 0) {
     method: "POST",
     headers: commonHeaders,
     body: JSON.stringify({
-      projectId: mainBranchId,
+      projectId,
       organizationId,
       model,
     }),
@@ -59,20 +59,19 @@ if (models.length === 0) {
   console.log(`Updated the Sonar intended architecture for ${projectKey}.`);
 }
 
-async function findMainBranchId() {
+async function findProjectId() {
   const response = await fetch(
-    `https://sonarcloud.io/api/project_branches/list?project=${encodeURIComponent(projectKey)}`,
+    `https://sonarcloud.io/api/navigation/component?component=${encodeURIComponent(projectKey)}`,
     { headers: { accept: "application/json" } },
   );
   if (!response.ok) {
-    throw new Error(`Unable to list Sonar branches: HTTP ${response.status}`);
+    throw new Error(`Unable to resolve Sonar project navigation: HTTP ${response.status}`);
   }
   const payload = await response.json();
-  const mainBranch = payload.branches?.find((branch) => branch.isMain);
-  if (!mainBranch?.branchId) {
-    throw new Error(`Unable to resolve the main Sonar branch for ${projectKey}.`);
+  if (!payload.id) {
+    throw new Error(`Unable to resolve the Sonar project id for ${projectKey}.`);
   }
-  return mainBranch.branchId;
+  return payload.id;
 }
 
 async function sonarRequest(url, options) {
