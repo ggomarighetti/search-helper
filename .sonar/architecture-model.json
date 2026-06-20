@@ -3,43 +3,96 @@
     {
       "label": "V2 Maven modules",
       "description": "Direct v2 module DAG for the publishable jpa-rsql-search reactor.",
-      "language": "java",
-      "qualifiers": "namespace",
       "groups": [
         {
           "label": "API",
           "patterns": [
-            "jpa-rsql-search-api:**"
+            "jpa-rsql-search-api/src/main/java/**"
           ]
         },
         {
           "label": "RSQL SPI",
           "patterns": [
-            "jpa-rsql-search-rsql-spi:**"
+            "jpa-rsql-search-rsql-spi/src/main/java/**"
           ]
         },
         {
           "label": "Core",
           "patterns": [
-            "jpa-rsql-search-core:**"
+            "jpa-rsql-search-core/src/main/java/**"
           ]
         },
         {
           "label": "JPA validation",
           "patterns": [
-            "jpa-rsql-search-jpa-validation:**"
+            "jpa-rsql-search-jpa-validation/src/main/java/**"
           ]
         },
         {
           "label": "Perplexhub",
           "patterns": [
-            "jpa-rsql-search-perplexhub:**"
+            "jpa-rsql-search-perplexhub/src/main/java/**"
           ]
         },
         {
           "label": "Spring Boot starter",
           "patterns": [
-            "jpa-rsql-search-spring-boot-starter:**"
+            "jpa-rsql-search-spring-boot-starter/src/main/java/**"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "relation": "exclusive-allow",
+          "from": [
+            "RSQL SPI",
+            "Core",
+            "JPA validation",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "API"
+          ]
+        },
+        {
+          "relation": "exclusive-allow",
+          "from": [
+            "Core",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "RSQL SPI"
+          ]
+        },
+        {
+          "relation": "exclusive-allow",
+          "from": [
+            "JPA validation",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "Core"
+          ]
+        },
+        {
+          "relation": "exclusive-allow",
+          "from": [
+            "Spring Boot starter"
+          ],
+          "to": [
+            "JPA validation"
+          ]
+        },
+        {
+          "relation": "exclusive-allow",
+          "from": [
+            "Spring Boot starter"
+          ],
+          "to": [
+            "Perplexhub"
           ]
         }
       ]

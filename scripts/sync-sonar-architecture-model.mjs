@@ -116,32 +116,52 @@ function expectedArchitectureModel() {
       {
         label: "V2 Maven modules",
         description: "Direct v2 module DAG for the publishable jpa-rsql-search reactor.",
-        language: "java",
-        qualifiers: "namespace",
         groups: [
           group(
             "API",
-            "jpa-rsql-search-api:**",
+            "jpa-rsql-search-api/src/main/java/**",
           ),
           group(
             "RSQL SPI",
-            "jpa-rsql-search-rsql-spi:**",
+            "jpa-rsql-search-rsql-spi/src/main/java/**",
           ),
           group(
             "Core",
-            "jpa-rsql-search-core:**",
+            "jpa-rsql-search-core/src/main/java/**",
           ),
           group(
             "JPA validation",
-            "jpa-rsql-search-jpa-validation:**",
+            "jpa-rsql-search-jpa-validation/src/main/java/**",
           ),
           group(
             "Perplexhub",
-            "jpa-rsql-search-perplexhub:**",
+            "jpa-rsql-search-perplexhub/src/main/java/**",
           ),
           group(
             "Spring Boot starter",
-            "jpa-rsql-search-spring-boot-starter:**",
+            "jpa-rsql-search-spring-boot-starter/src/main/java/**",
+          ),
+        ],
+        constraints: [
+          exclusiveAllow(
+            ["RSQL SPI", "Core", "JPA validation", "Perplexhub", "Spring Boot starter"],
+            ["API"],
+          ),
+          exclusiveAllow(
+            ["Core", "Perplexhub", "Spring Boot starter"],
+            ["RSQL SPI"],
+          ),
+          exclusiveAllow(
+            ["JPA validation", "Perplexhub", "Spring Boot starter"],
+            ["Core"],
+          ),
+          exclusiveAllow(
+            ["Spring Boot starter"],
+            ["JPA validation"],
+          ),
+          exclusiveAllow(
+            ["Spring Boot starter"],
+            ["Perplexhub"],
           ),
         ],
       },
@@ -153,5 +173,13 @@ function group(label, pattern) {
   return {
     label,
     patterns: [pattern],
+  };
+}
+
+function exclusiveAllow(from, to) {
+  return {
+    relation: "exclusive-allow",
+    from,
+    to,
   };
 }

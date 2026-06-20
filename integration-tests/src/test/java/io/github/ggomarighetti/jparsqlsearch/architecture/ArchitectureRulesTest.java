@@ -11,11 +11,13 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureRulesTest {
     private static final List<String> PRODUCT_MODULES = List.of(
@@ -54,12 +56,12 @@ class ArchitectureRulesTest {
                 perspective.path("label").asText(),
                 "Sonar should display the publishable v2 Maven reactor as the intended architecture.");
         Map<String, String> expectedGroups = new LinkedHashMap<>();
-        expectedGroups.put("API", "jpa-rsql-search-api:**");
-        expectedGroups.put("RSQL SPI", "jpa-rsql-search-rsql-spi:**");
-        expectedGroups.put("Core", "jpa-rsql-search-core:**");
-        expectedGroups.put("JPA validation", "jpa-rsql-search-jpa-validation:**");
-        expectedGroups.put("Perplexhub", "jpa-rsql-search-perplexhub:**");
-        expectedGroups.put("Spring Boot starter", "jpa-rsql-search-spring-boot-starter:**");
+        expectedGroups.put("API", "jpa-rsql-search-api/src/main/java/**");
+        expectedGroups.put("RSQL SPI", "jpa-rsql-search-rsql-spi/src/main/java/**");
+        expectedGroups.put("Core", "jpa-rsql-search-core/src/main/java/**");
+        expectedGroups.put("JPA validation", "jpa-rsql-search-jpa-validation/src/main/java/**");
+        expectedGroups.put("Perplexhub", "jpa-rsql-search-perplexhub/src/main/java/**");
+        expectedGroups.put("Spring Boot starter", "jpa-rsql-search-spring-boot-starter/src/main/java/**");
         Map<String, String> actualGroups = new LinkedHashMap<>();
         perspective
                 .path("groups")
@@ -73,9 +75,10 @@ class ArchitectureRulesTest {
                     actualGroups.put(label, group.path("patterns").path(0).asText());
                 });
         assertEquals(expectedGroups, actualGroups);
-        assertEquals("java", perspective.path("language").asText(), "The SonarCloud model must target Java.");
-        assertEquals("namespace", perspective.path("qualifiers").asText(), "The SonarCloud model maps Maven modules as namespace containers.");
-        assertEquals(0, perspective.path("constraints").size(), "The SonarCloud models API currently accepts the intended module structure only.");
+        assertEquals(5, perspective.path("constraints").size(), "The intended architecture must encode the v2 DAG.");
+        perspective.path("constraints").forEach(constraint -> assertTrue(
+                Set.of("exclusive-allow").contains(constraint.path("relation").asText()),
+                () -> "Unexpected Sonar architecture relation: " + constraint));
         assertEquals(0, model.path("constraints").size(), "The SonarCloud intended architecture API expects perspective-scoped constraints.");
     }
 
