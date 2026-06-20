@@ -21,7 +21,7 @@ if (!token) {
   throw new Error("SONAR_TOKEN is required to synchronize the architecture model.");
 }
 
-const projectId = await findProjectId();
+const projectId = projectKey;
 const authorization = `Basic ${Buffer.from(`${token}:`).toString("base64")}`;
 const commonHeaders = {
   accept: "application/json",
@@ -57,21 +57,6 @@ if (models.length === 0) {
     },
   );
   console.log(`Updated the Sonar intended architecture for ${projectKey}.`);
-}
-
-async function findProjectId() {
-  const response = await fetch(
-    `https://sonarcloud.io/api/navigation/component?component=${encodeURIComponent(projectKey)}`,
-    { headers: { accept: "application/json" } },
-  );
-  if (!response.ok) {
-    throw new Error(`Unable to resolve Sonar project navigation: HTTP ${response.status}`);
-  }
-  const payload = await response.json();
-  if (!payload.id) {
-    throw new Error(`Unable to resolve the Sonar project id for ${projectKey}.`);
-  }
-  return payload.id;
 }
 
 async function sonarRequest(url, options) {
