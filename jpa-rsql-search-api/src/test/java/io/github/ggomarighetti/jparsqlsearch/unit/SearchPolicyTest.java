@@ -13,7 +13,7 @@ class SearchPolicyTest {
 
         assertEquals(defaults.rsql(), SearchPolicy.Rsql.builder().build());
         assertEquals(defaults.filter(), SearchPolicy.Filter.builder().build());
-        assertEquals(defaults.filter().like(), SearchPolicy.Filter.Like.builder().build());
+        assertEquals(defaults.filter().text(), SearchPolicy.Filter.Text.builder().build());
         assertEquals(defaults.paging(), SearchPolicy.Paging.builder().build());
         assertEquals(defaults.paging().page(), SearchPolicy.Paging.Page.builder().build());
         assertEquals(defaults.paging().slice(), SearchPolicy.Paging.Slice.builder().build());
@@ -27,7 +27,7 @@ class SearchPolicyTest {
         assertEquals(7, SearchPolicy.Filter.builder().maxComparisons(7).build().maxComparisons());
         assertEquals(
                 8,
-                SearchPolicy.Filter.Like.builder().maxPatternLength(8).build().maxPatternLength());
+                SearchPolicy.Filter.Text.builder().maxPatternLength(8).build().maxPatternLength());
         assertEquals(
                 2,
                 SearchPolicy.Paging.Page.builder().maxToManyPaths(2).build().maxToManyPaths());

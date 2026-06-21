@@ -122,7 +122,7 @@ class SearchProtectionTest {
     @Test
     void likeProtectionDoesNotTreatEscapedTrailingWildcardAsPatternWildcard() {
         SearchPolicy policy = SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like.allowTrailingWildcard(false)))
+                .filter(filter -> filter.text(text -> text.allowTrailingWildcard(false)))
                 .build();
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder(policy)
                 .entity(TestTypes.Product.class)
@@ -155,7 +155,7 @@ class SearchProtectionTest {
                         1,
                         wildcardArguments));
 
-        assertRule(exception, "filter.like.allow-trailing-wildcard", 1, 0);
+        assertRule(exception, "filter.text.allow-trailing-wildcard", 1, 0);
     }
 
     @Test
@@ -221,38 +221,38 @@ class SearchProtectionTest {
     }
 
     @Test
-    void rejectsLikePolicyViolations() {
+    void rejectsTextPatternPolicyViolations() {
         SearchDefinition<TestTypes.Product> definition = comparisonDefinition(SearchPolicy.defaults());
         var nameField = definition.field("name").orElseThrow();
 
         SearchProtectionException ignoreCase = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like.allowIgnoreCase(false)))
+                        .filter(filter -> filter.text(text -> text.allowIgnoreCase(false)))
                         .build())
                         .recordComparison(nameField, descriptor(IGNORE_CASE_LIKE), 1, List.of("abc")));
         SearchProtectionException length = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like.maxPatternLength(2)))
+                        .filter(filter -> filter.text(text -> text.maxPatternLength(2)))
                         .build())
                         .recordComparison(nameField, descriptor(LIKE), 1, List.of("abc")));
         SearchProtectionException wildcards = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like.maxWildcards(0)))
+                        .filter(filter -> filter.text(text -> text.maxWildcards(0)))
                         .build())
                         .recordComparison(nameField, descriptor(LIKE), 1, List.of("a*b")));
         SearchProtectionException leading = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like.allowLeadingWildcard(false)))
+                        .filter(filter -> filter.text(text -> text.allowLeadingWildcard(false)))
                         .build())
                         .recordComparison(nameField, descriptor(LIKE), 1, List.of("*abc")));
         SearchProtectionException contains = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like
+                        .filter(filter -> filter.text(text -> text
                                 .allowLeadingWildcard(true)
                                 .allowTrailingWildcard(true)
                                 .allowContains(false)
@@ -262,16 +262,16 @@ class SearchProtectionTest {
         SearchProtectionException literal = thrownBy(
                 SearchProtectionException.class,
                 () -> context(SearchPolicy.builder()
-                        .filter(filter -> filter.like(like -> like.minLiteralLength(3)))
+                        .filter(filter -> filter.text(text -> text.minLiteralLength(3)))
                         .build())
                         .recordComparison(nameField, descriptor(LIKE), 1, List.of("a*")));
 
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .filter(filter -> filter.text(text -> text.minLiteralLength(0)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like
+                .filter(filter -> filter.text(text -> text
                         .minLiteralLength(0)
                         .allowLeadingWildcard(true)
                         .allowTrailingWildcard(true)
@@ -279,11 +279,11 @@ class SearchProtectionTest {
                 .build())
                 .recordComparison(nameField, descriptor(NOT_LIKE), 1, List.of("abc")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .filter(filter -> filter.text(text -> text.minLiteralLength(0)))
                 .build())
                 .recordComparison(nameField, descriptor(IGNORE_CASE), 1, List.of("abc")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like
+                .filter(filter -> filter.text(text -> text
                         .minLiteralLength(0)
                         .allowLeadingWildcard(true)
                         .allowTrailingWildcard(true)
@@ -291,7 +291,7 @@ class SearchProtectionTest {
                 .build())
                 .recordComparison(nameField, descriptor(IGNORE_CASE_NOT_LIKE), 1, List.of("\\*abc\\*")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like
+                .filter(filter -> filter.text(text -> text
                         .minLiteralLength(0)
                         .maxWildcards(2)
                         .allowLeadingWildcard(true)
@@ -300,31 +300,31 @@ class SearchProtectionTest {
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("%abc%")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like
+                .filter(filter -> filter.text(text -> text
                         .minLiteralLength(0)
                         .maxWildcards(2)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("a%b")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like
+                .filter(filter -> filter.text(text -> text
                         .minLiteralLength(0)
                         .allowLeadingWildcard(true)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("*abc")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .filter(filter -> filter.text(text -> text.minLiteralLength(0)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("abc*")));
         assertDoesNotThrow(() -> context(SearchPolicy.builder()
-                .filter(filter -> filter.like(like -> like.minLiteralLength(0)))
+                .filter(filter -> filter.text(text -> text.minLiteralLength(0)))
                 .build())
                 .recordComparison(nameField, descriptor(LIKE), 1, List.of("\\%abc\\%")));
-        assertRule(ignoreCase, "filter.like.allow-ignore-case", 1, 0);
-        assertRule(length, "filter.like.max-pattern-length", 3, 2);
-        assertRule(wildcards, "filter.like.max-wildcards", 1, 0);
-        assertRule(leading, "filter.like.allow-leading-wildcard", 1, 0);
-        assertRule(contains, "filter.like.allow-contains", 1, 0);
-        assertRule(literal, "filter.like.min-literal-length", 1, 3);
+        assertRule(ignoreCase, "filter.text.allow-ignore-case", 1, 0);
+        assertRule(length, "filter.text.max-pattern-length", 3, 2);
+        assertRule(wildcards, "filter.text.max-wildcards", 1, 0);
+        assertRule(leading, "filter.text.allow-leading-wildcard", 1, 0);
+        assertRule(contains, "filter.text.allow-contains", 1, 0);
+        assertRule(literal, "filter.text.min-literal-length", 1, 3);
     }
 
     @Test

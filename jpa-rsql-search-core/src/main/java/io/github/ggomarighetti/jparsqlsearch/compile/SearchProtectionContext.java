@@ -26,6 +26,7 @@ final class SearchProtectionContext {
     private final SearchPolicy.Filter filterLimits;
     private final SearchPolicy.Sorting sortingLimits;
     private final SearchPolicy.Query queryLimits;
+    private final SearchTextPatternGuard textPatternGuard;
     private final Set<String> joinedPaths = new LinkedHashSet<>();
     private final Set<String> toManyPaths = new LinkedHashSet<>();
     private final Set<String> sortingJoinedPaths = new LinkedHashSet<>();
@@ -48,6 +49,7 @@ final class SearchProtectionContext {
         this.filterLimits = policy.filter();
         this.sortingLimits = policy.sorting();
         this.queryLimits = policy.query();
+        this.textPatternGuard = new SearchTextPatternGuard(filterLimits.text());
     }
 
     public SearchPolicy policy() {
@@ -103,7 +105,7 @@ final class SearchProtectionContext {
                     negatedComparisons,
                     filterLimits.maxNegatedComparisons());
         }
-        validateLikePattern(rsqlOperator, arguments);
+        textPatternGuard.validate(rsqlOperator, arguments);
         recordFilterTopology(field.filtering().topology());
     }
 
@@ -264,36 +266,6 @@ final class SearchProtectionContext {
         }
     }
 
-    private void validateLikePattern(RsqlOperator operator, Iterable<String> arguments) {
-        if (!isLikeOperator(operator)) {
-            return;
-        }
-        SearchPolicy.Filter.Like like = filterLimits.like();
-        if (isIgnoreCaseOperator(operator) && !like.allowIgnoreCase()) {
-            throw exceeded("filter.like.allow-ignore-case", 1, 0);
-        }
-        for (String argument : arguments) {
-            requireAtMost("filter.like.max-pattern-length", argument.length(), like.maxPatternLength());
-            int wildcards = countWildcards(argument);
-            requireAtMost("filter.like.max-wildcards", wildcards, like.maxWildcards());
-            boolean leading = startsWithWildcard(argument);
-            boolean trailing = endsWithWildcard(argument);
-            if (leading && !like.allowLeadingWildcard()) {
-                throw exceeded("filter.like.allow-leading-wildcard", 1, 0);
-            }
-            if (trailing && !like.allowTrailingWildcard()) {
-                throw exceeded("filter.like.allow-trailing-wildcard", 1, 0);
-            }
-            if (leading && trailing && !like.allowContains()) {
-                throw exceeded("filter.like.allow-contains", 1, 0);
-            }
-            int literalLength = literalLength(argument);
-            if (literalLength < like.minLiteralLength()) {
-                throw exceeded("filter.like.min-literal-length", literalLength, like.minLiteralLength());
-            }
-        }
-    }
-
     private static boolean isNegated(RsqlOperator operator) {
         return RsqlOperators.NOT_EQUAL.equals(operator)
                 || RsqlOperators.NOT_IN.equals(operator)
@@ -301,79 +273,6 @@ final class SearchProtectionContext {
                 || RsqlOperators.NOT_LIKE.equals(operator)
                 || RsqlOperators.IGNORE_CASE_NOT_LIKE.equals(operator)
                 || RsqlOperators.NOT_BETWEEN.equals(operator);
-    }
-
-    private static boolean isLikeOperator(RsqlOperator operator) {
-        return RsqlOperators.LIKE.equals(operator)
-                || RsqlOperators.NOT_LIKE.equals(operator)
-                || RsqlOperators.IGNORE_CASE.equals(operator)
-                || RsqlOperators.IGNORE_CASE_LIKE.equals(operator)
-                || RsqlOperators.IGNORE_CASE_NOT_LIKE.equals(operator);
-    }
-
-    private static boolean isIgnoreCaseOperator(RsqlOperator operator) {
-        return RsqlOperators.IGNORE_CASE.equals(operator)
-                || RsqlOperators.IGNORE_CASE_LIKE.equals(operator)
-                || RsqlOperators.IGNORE_CASE_NOT_LIKE.equals(operator);
-    }
-
-    private static int countWildcards(String value) {
-        int count = 0;
-        boolean escaped = false;
-        for (int index = 0; index < value.length(); index++) {
-            char current = value.charAt(index);
-            if (escaped) {
-                escaped = false;
-            } else if (current == '\\') {
-                escaped = true;
-            } else if (current == '*' || current == '%') {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    private static boolean startsWithWildcard(String value) {
-        return !value.isEmpty() && isWildcardAt(value, 0);
-    }
-
-    private static boolean endsWithWildcard(String value) {
-        if (value.isEmpty()) {
-            return false;
-        }
-        return isWildcardAt(value, value.length() - 1);
-    }
-
-    private static int literalLength(String value) {
-        int count = 0;
-        boolean escaped = false;
-        for (int index = 0; index < value.length(); index++) {
-            char current = value.charAt(index);
-            if (escaped) {
-                count++;
-                escaped = false;
-            } else if (current == '\\') {
-                escaped = true;
-            } else if (current != '*' && current != '%') {
-                count++;
-            }
-        }
-        if (escaped) {
-            count++;
-        }
-        return count;
-    }
-
-    private static boolean isWildcardAt(String value, int index) {
-        char current = value.charAt(index);
-        if (current != '*' && current != '%') {
-            return false;
-        }
-        int backslashes = 0;
-        for (int cursor = index - 1; cursor >= 0 && value.charAt(cursor) == '\\'; cursor--) {
-            backslashes++;
-        }
-        return backslashes % 2 == 0;
     }
 
     private static void requireAtMost(String rule, long actual, long limit) {

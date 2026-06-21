@@ -45,14 +45,14 @@ class JpaRsqlSearchProperties {
                         .maxToManyPaths(filter.maxToManyPaths)
                         .allowToManyFiltering(filter.allowToManyFiltering)
                         .requireDistinctForToMany(filter.requireDistinctForToMany)
-                        .like(like -> like
-                                .maxPatternLength(filter.like.maxPatternLength)
-                                .minLiteralLength(filter.like.minLiteralLength)
-                                .allowLeadingWildcard(filter.like.allowLeadingWildcard)
-                                .allowTrailingWildcard(filter.like.allowTrailingWildcard)
-                                .allowContains(filter.like.allowContains)
-                                .maxWildcards(filter.like.maxWildcards)
-                                .allowIgnoreCase(filter.like.allowIgnoreCase)))
+                        .text(text -> text
+                                .maxPatternLength(filter.text.maxPatternLength)
+                                .minLiteralLength(filter.text.minLiteralLength)
+                                .allowLeadingWildcard(filter.text.allowLeadingWildcard)
+                                .allowTrailingWildcard(filter.text.allowTrailingWildcard)
+                                .allowContains(filter.text.allowContains)
+                                .maxWildcards(filter.text.maxWildcards)
+                                .allowIgnoreCase(filter.text.allowIgnoreCase)))
                 .paging(builder -> builder
                         .minPage(paging.minPage)
                         .maxPage(paging.maxPage)
@@ -215,8 +215,8 @@ class JpaRsqlSearchProperties {
 
     /** Semantic filtering and relationship-topology limits. */
     public static class Filter {
-        /** LIKE-family operator limits. */
-        private final Like like = new Like();
+        /** Text-pattern operator limits. */
+        private final Text text = new Text();
         /** Maximum comparisons in one filter. */
         private int maxComparisons = SearchPolicy.defaults().filter().maxComparisons();
         /** Maximum comparisons targeting the same selector. */
@@ -252,8 +252,8 @@ class JpaRsqlSearchProperties {
         /** Whether to-many filters require a distinct query. */
         private boolean requireDistinctForToMany = SearchPolicy.defaults().filter().requireDistinctForToMany();
 
-        public Like getLike() {
-            return like;
+        public Text getText() {
+            return text;
         }
 
         public int getMaxComparisons() {
@@ -392,22 +392,22 @@ class JpaRsqlSearchProperties {
             requireDistinctForToMany = value;
         }
 
-        /** LIKE and case-insensitive LIKE limits. */
-        public static class Like {
-            /** Maximum raw LIKE pattern length in characters. */
-            private int maxPatternLength = SearchPolicy.defaults().filter().like().maxPatternLength();
-            /** Minimum number of non-wildcard characters in a LIKE pattern. */
-            private int minLiteralLength = SearchPolicy.defaults().filter().like().minLiteralLength();
-            /** Whether LIKE patterns may start with a wildcard. */
-            private boolean allowLeadingWildcard = SearchPolicy.defaults().filter().like().allowLeadingWildcard();
-            /** Whether LIKE patterns may end with a wildcard. */
-            private boolean allowTrailingWildcard = SearchPolicy.defaults().filter().like().allowTrailingWildcard();
+        /** Text-pattern and case-insensitive text operator limits. */
+        public static class Text {
+            /** Maximum raw text pattern length in characters. */
+            private int maxPatternLength = SearchPolicy.defaults().filter().text().maxPatternLength();
+            /** Minimum number of non-wildcard characters in a text pattern. */
+            private int minLiteralLength = SearchPolicy.defaults().filter().text().minLiteralLength();
+            /** Whether text patterns may start with a wildcard. */
+            private boolean allowLeadingWildcard = SearchPolicy.defaults().filter().text().allowLeadingWildcard();
+            /** Whether text patterns may end with a wildcard. */
+            private boolean allowTrailingWildcard = SearchPolicy.defaults().filter().text().allowTrailingWildcard();
             /** Whether one pattern may combine leading and trailing wildcards. */
-            private boolean allowContains = SearchPolicy.defaults().filter().like().allowContains();
-            /** Maximum unescaped wildcard count in a LIKE pattern. */
-            private int maxWildcards = SearchPolicy.defaults().filter().like().maxWildcards();
-            /** Whether case-insensitive LIKE operators are allowed. */
-            private boolean allowIgnoreCase = SearchPolicy.defaults().filter().like().allowIgnoreCase();
+            private boolean allowContains = SearchPolicy.defaults().filter().text().allowContains();
+            /** Maximum unescaped wildcard count in a text pattern. */
+            private int maxWildcards = SearchPolicy.defaults().filter().text().maxWildcards();
+            /** Whether case-insensitive text operators are allowed. */
+            private boolean allowIgnoreCase = SearchPolicy.defaults().filter().text().allowIgnoreCase();
 
             public int getMaxPatternLength() {
                 return maxPatternLength;

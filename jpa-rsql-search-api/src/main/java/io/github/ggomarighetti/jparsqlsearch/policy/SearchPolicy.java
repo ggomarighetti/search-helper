@@ -81,13 +81,13 @@ public final class SearchPolicy {
         builder.filter.maxToManyPaths = filter.maxToManyPaths();
         builder.filter.allowToManyFiltering = filter.allowToManyFiltering();
         builder.filter.requireDistinctForToMany = filter.requireDistinctForToMany();
-        builder.filter.like.maxPatternLength = filter.like().maxPatternLength();
-        builder.filter.like.minLiteralLength = filter.like().minLiteralLength();
-        builder.filter.like.allowLeadingWildcard = filter.like().allowLeadingWildcard();
-        builder.filter.like.allowTrailingWildcard = filter.like().allowTrailingWildcard();
-        builder.filter.like.allowContains = filter.like().allowContains();
-        builder.filter.like.maxWildcards = filter.like().maxWildcards();
-        builder.filter.like.allowIgnoreCase = filter.like().allowIgnoreCase();
+        builder.filter.text.maxPatternLength = filter.text().maxPatternLength();
+        builder.filter.text.minLiteralLength = filter.text().minLiteralLength();
+        builder.filter.text.allowLeadingWildcard = filter.text().allowLeadingWildcard();
+        builder.filter.text.allowTrailingWildcard = filter.text().allowTrailingWildcard();
+        builder.filter.text.allowContains = filter.text().allowContains();
+        builder.filter.text.maxWildcards = filter.text().maxWildcards();
+        builder.filter.text.allowIgnoreCase = filter.text().allowIgnoreCase();
         builder.paging.minPage = paging.minPage();
         builder.paging.maxPage = paging.maxPage();
         builder.paging.minSize = paging.minSize();
@@ -443,7 +443,7 @@ public final class SearchPolicy {
      * @param maxToManyPaths maximum distinct to-many paths
      * @param allowToManyFiltering whether to-many filtering is allowed
      * @param requireDistinctForToMany whether to-many filters must request distinct
-     * @param like LIKE-family limits
+     * @param text text-pattern limits
      */
     public record Filter(
             int maxComparisons,
@@ -463,7 +463,7 @@ public final class SearchPolicy {
             int maxToManyPaths,
             boolean allowToManyFiltering,
             boolean requireDistinctForToMany,
-            Like like) {
+            Text text) {
         /** Validates filter limits. */
         public Filter {
             requirePositive(maxComparisons, "filter.maxComparisons");
@@ -481,7 +481,7 @@ public final class SearchPolicy {
             requireNonNegative(maxHeterogeneousOrBranches, "filter.maxHeterogeneousOrBranches");
             requireNonNegative(maxJoinedPaths, "filter.maxJoinedPaths");
             requireNonNegative(maxToManyPaths, "filter.maxToManyPaths");
-            Objects.requireNonNull(like, "filter.like must not be null");
+            Objects.requireNonNull(text, "filter.text must not be null");
         }
 
         /**
@@ -517,12 +517,12 @@ public final class SearchPolicy {
             private int maxToManyPaths = 1;
             private boolean allowToManyFiltering = true;
             private boolean requireDistinctForToMany = true;
-            private final Like.Builder like;
+            private final Text.Builder text;
 
             private Builder(Consumer<Consumer<Builder>> overrideRecorder) {
                 this.overrideRecorder = overrideRecorder;
-                like = Like.builder(customizer ->
-                        overrideRecorder.accept(builder -> builder.like(customizer)));
+                text = Text.builder(customizer ->
+                        overrideRecorder.accept(builder -> builder.text(customizer)));
             }
 
             /**
@@ -730,14 +730,14 @@ public final class SearchPolicy {
             }
 
             /**
-             * Customizes LIKE-family limits.
+             * Customizes text-pattern limits.
              *
-             * @param customizer LIKE policy customizer
+             * @param customizer text policy customizer
              * @return this builder
              */
-            public Builder like(Consumer<Like.Builder> customizer) {
+            public Builder text(Consumer<Text.Builder> customizer) {
                 Objects.requireNonNull(customizer, CUSTOMIZER_MUST_NOT_BE_NULL);
-                customizer.accept(like);
+                customizer.accept(text);
                 return this;
             }
 
@@ -765,12 +765,12 @@ public final class SearchPolicy {
                         maxToManyPaths,
                         allowToManyFiltering,
                         requireDistinctForToMany,
-                        like.build());
+                        text.build());
             }
         }
 
         /**
-         * Limits for LIKE and case-insensitive LIKE operators.
+         * Limits for text-pattern and case-insensitive text operators.
          *
          * @param maxPatternLength maximum raw pattern length
          * @param minLiteralLength minimum non-wildcard characters
@@ -780,7 +780,7 @@ public final class SearchPolicy {
          * @param maxWildcards maximum unescaped wildcard count
          * @param allowIgnoreCase whether case-insensitive operators are allowed
          */
-        public record Like(
+        public record Text(
                 int maxPatternLength,
                 int minLiteralLength,
                 boolean allowLeadingWildcard,
@@ -788,15 +788,15 @@ public final class SearchPolicy {
                 boolean allowContains,
                 int maxWildcards,
                 boolean allowIgnoreCase) {
-            /** Validates LIKE limits. */
-            public Like {
-                requirePositive(maxPatternLength, "filter.like.maxPatternLength");
-                requireNonNegative(minLiteralLength, "filter.like.minLiteralLength");
-                requireNonNegative(maxWildcards, "filter.like.maxWildcards");
+            /** Validates text-pattern limits. */
+            public Text {
+                requirePositive(maxPatternLength, "filter.text.maxPatternLength");
+                requireNonNegative(minLiteralLength, "filter.text.minLiteralLength");
+                requireNonNegative(maxWildcards, "filter.text.maxWildcards");
             }
 
             /**
-             * Creates a LIKE policy builder.
+             * Creates a text-pattern policy builder.
              *
              * @return new builder
              */
@@ -808,7 +808,7 @@ public final class SearchPolicy {
                 return new Builder(overrideRecorder);
             }
 
-            /** Builder for LIKE-family limits. */
+            /** Builder for text-pattern limits. */
             public static final class Builder {
                 private final Consumer<Consumer<Builder>> overrideRecorder;
                 private int maxPatternLength = 128;
@@ -896,7 +896,7 @@ public final class SearchPolicy {
                 }
 
                 /**
-                 * Enables case-insensitive LIKE operators.
+                 * Enables case-insensitive text operators.
                  *
                  * @param value allowed state
                  * @return this builder
@@ -908,12 +908,12 @@ public final class SearchPolicy {
                 }
 
                 /**
-                 * Builds LIKE limits.
+                 * Builds text-pattern limits.
                  *
-                 * @return validated LIKE policy
+                 * @return validated text-pattern policy
                  */
-                public Like build() {
-                    return new Like(
+                public Text build() {
+                    return new Text(
                             maxPatternLength,
                             minLiteralLength,
                             allowLeadingWildcard,

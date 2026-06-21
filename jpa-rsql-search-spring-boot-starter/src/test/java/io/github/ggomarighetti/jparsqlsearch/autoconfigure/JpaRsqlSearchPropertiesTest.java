@@ -40,13 +40,13 @@ class JpaRsqlSearchPropertiesTest {
                 entry("jpa.rsql.search.filter.max-to-many-paths", "2"),
                 entry("jpa.rsql.search.filter.allow-to-many-filtering", "false"),
                 entry("jpa.rsql.search.filter.require-distinct-for-to-many", "false"),
-                entry("jpa.rsql.search.filter.like.max-pattern-length", "40"),
-                entry("jpa.rsql.search.filter.like.min-literal-length", "2"),
-                entry("jpa.rsql.search.filter.like.allow-leading-wildcard", "true"),
-                entry("jpa.rsql.search.filter.like.allow-trailing-wildcard", "false"),
-                entry("jpa.rsql.search.filter.like.allow-contains", "false"),
-                entry("jpa.rsql.search.filter.like.max-wildcards", "2"),
-                entry("jpa.rsql.search.filter.like.allow-ignore-case", "false"),
+                entry("jpa.rsql.search.filter.text.max-pattern-length", "40"),
+                entry("jpa.rsql.search.filter.text.min-literal-length", "2"),
+                entry("jpa.rsql.search.filter.text.allow-leading-wildcard", "true"),
+                entry("jpa.rsql.search.filter.text.allow-trailing-wildcard", "false"),
+                entry("jpa.rsql.search.filter.text.allow-contains", "false"),
+                entry("jpa.rsql.search.filter.text.max-wildcards", "2"),
+                entry("jpa.rsql.search.filter.text.allow-ignore-case", "false"),
                 entry("jpa.rsql.search.paging.min-page", "1"),
                 entry("jpa.rsql.search.paging.max-page", "20"),
                 entry("jpa.rsql.search.paging.min-size", "2"),
@@ -139,24 +139,24 @@ class JpaRsqlSearchPropertiesTest {
         assertFalse(policy.filter().allowToManyFiltering());
         assertFalse(policy.filter().requireDistinctForToMany());
 
-        assertFilterLikeProperties(properties, policy);
+        assertFilterTextProperties(properties, policy);
     }
 
-    private static void assertFilterLikeProperties(JpaRsqlSearchProperties properties, SearchPolicy policy) {
-        assertEquals(40, properties.getFilter().getLike().getMaxPatternLength());
-        assertEquals(2, properties.getFilter().getLike().getMinLiteralLength());
-        assertTrue(properties.getFilter().getLike().isAllowLeadingWildcard());
-        assertFalse(properties.getFilter().getLike().isAllowTrailingWildcard());
-        assertFalse(properties.getFilter().getLike().isAllowContains());
-        assertEquals(2, properties.getFilter().getLike().getMaxWildcards());
-        assertFalse(properties.getFilter().getLike().isAllowIgnoreCase());
-        assertEquals(40, policy.filter().like().maxPatternLength());
-        assertEquals(2, policy.filter().like().minLiteralLength());
-        assertTrue(policy.filter().like().allowLeadingWildcard());
-        assertFalse(policy.filter().like().allowTrailingWildcard());
-        assertFalse(policy.filter().like().allowContains());
-        assertEquals(2, policy.filter().like().maxWildcards());
-        assertFalse(policy.filter().like().allowIgnoreCase());
+    private static void assertFilterTextProperties(JpaRsqlSearchProperties properties, SearchPolicy policy) {
+        assertEquals(40, properties.getFilter().getText().getMaxPatternLength());
+        assertEquals(2, properties.getFilter().getText().getMinLiteralLength());
+        assertTrue(properties.getFilter().getText().isAllowLeadingWildcard());
+        assertFalse(properties.getFilter().getText().isAllowTrailingWildcard());
+        assertFalse(properties.getFilter().getText().isAllowContains());
+        assertEquals(2, properties.getFilter().getText().getMaxWildcards());
+        assertFalse(properties.getFilter().getText().isAllowIgnoreCase());
+        assertEquals(40, policy.filter().text().maxPatternLength());
+        assertEquals(2, policy.filter().text().minLiteralLength());
+        assertTrue(policy.filter().text().allowLeadingWildcard());
+        assertFalse(policy.filter().text().allowTrailingWildcard());
+        assertFalse(policy.filter().text().allowContains());
+        assertEquals(2, policy.filter().text().maxWildcards());
+        assertFalse(policy.filter().text().allowIgnoreCase());
     }
 
     private static void assertPagingProperties(JpaRsqlSearchProperties properties, SearchPolicy policy) {

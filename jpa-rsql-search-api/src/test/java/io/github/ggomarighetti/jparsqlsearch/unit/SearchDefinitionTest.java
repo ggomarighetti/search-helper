@@ -351,7 +351,7 @@ class SearchDefinitionTest {
                         .maxToManyPaths(2)
                         .allowToManyFiltering(false)
                         .requireDistinctForToMany(false)
-                        .like(like -> like
+                        .text(text -> text
                                 .maxPatternLength(80)
                                 .minLiteralLength(2)
                                 .allowLeadingWildcard(true)
