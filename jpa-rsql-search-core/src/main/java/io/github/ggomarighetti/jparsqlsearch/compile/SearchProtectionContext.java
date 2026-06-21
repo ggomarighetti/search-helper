@@ -197,7 +197,7 @@ final class SearchProtectionContext {
     }
 
     public void completePageable() {
-        // Pageable-only limits are enforced by SearchPageableGuard and recordSort.
+        // Pageable-only limits are enforced by PageableSearchGuard and recordSort.
     }
 
     public void completeRequest() {

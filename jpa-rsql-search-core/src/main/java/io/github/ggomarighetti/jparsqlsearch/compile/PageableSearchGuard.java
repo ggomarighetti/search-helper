@@ -15,18 +15,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-final class SearchPageableGuard {
+final class PageableSearchGuard {
     private static final String DEFINITION_MUST_NOT_BE_NULL = "definition must not be null";
     private static final String PAGEABLE_MUST_NOT_BE_NULL = "pageable must not be null";
     private static final String POLICY_MUST_NOT_BE_NULL = "policy must not be null";
 
     private final SearchPolicy policy;
 
-    SearchPageableGuard() {
+    PageableSearchGuard() {
         this(SearchPolicy.defaults());
     }
 
-    SearchPageableGuard(SearchPolicy policy) {
+    PageableSearchGuard(SearchPolicy policy) {
         this.policy = Objects.requireNonNull(policy, POLICY_MUST_NOT_BE_NULL);
     }
 

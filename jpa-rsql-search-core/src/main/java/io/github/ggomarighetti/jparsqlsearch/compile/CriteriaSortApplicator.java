@@ -18,11 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
-final class SearchSpecificationSorting {
+final class CriteriaSortApplicator {
     private static final String DEFINITION_MUST_NOT_BE_NULL = "definition must not be null";
     private static final String PAGEABLE_MUST_NOT_BE_NULL = "pageable must not be null";
 
-    private SearchSpecificationSorting() {
+    private CriteriaSortApplicator() {
     }
 
     static boolean requiresCriteriaSorting(

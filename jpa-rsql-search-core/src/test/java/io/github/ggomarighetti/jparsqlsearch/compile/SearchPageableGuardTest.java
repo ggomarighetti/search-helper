@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
-class SearchPageableGuardTest {
-    private final SearchPageableGuard guard = new SearchPageableGuard();
+class PageableSearchGuardTest {
+    private final PageableSearchGuard guard = new PageableSearchGuard();
 
     @Test
     void translatesSortableSelectorsToInternalPaths() {
@@ -263,7 +263,7 @@ class SearchPageableGuardTest {
 
     @Test
     void partialDefinitionLimitsPreserveRuntimeGuardPolicy() {
-        SearchPageableGuard limitedGuard = new SearchPageableGuard(SearchPolicy.builder()
+        PageableSearchGuard limitedGuard = new PageableSearchGuard(SearchPolicy.builder()
                 .paging(paging -> paging.maxSize(5))
                 .build());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)

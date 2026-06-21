@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.data.jpa.domain.Specification.unrestricted;
 
-class SearchQueryGuardTest {
-    private final SearchQueryGuard guard = new SearchQueryGuard();
+class QuerySearchGuardTest {
+    private final QuerySearchGuard guard = new QuerySearchGuard();
 
     @Test
     void returnsUnrestrictedSpecificationWhenQueryIsBlank() {
@@ -36,7 +36,7 @@ class SearchQueryGuardTest {
 
     @Test
     void rejectsQueryWhenPolicyDisablesQuerying() {
-        SearchQueryGuard disabledGuard = new SearchQueryGuard(SearchPolicy.builder()
+        QuerySearchGuard disabledGuard = new QuerySearchGuard(SearchPolicy.builder()
                 .query(query -> query.enabled(false))
                 .build());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
@@ -53,7 +53,7 @@ class SearchQueryGuardTest {
 
     @Test
     void rejectsQueryWhenPolicyRequiresRulesAndDefinitionHasNone() {
-        SearchQueryGuard guarded = new SearchQueryGuard(SearchPolicy.builder()
+        QuerySearchGuard guarded = new QuerySearchGuard(SearchPolicy.builder()
                 .query(query -> query.requireValidator(true))
                 .build());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
@@ -70,7 +70,7 @@ class SearchQueryGuardTest {
 
     @Test
     void acceptsQueryWhenPolicyRequiresRulesAndDefinitionHasRules() {
-        SearchQueryGuard guarded = new SearchQueryGuard(SearchPolicy.builder()
+        QuerySearchGuard guarded = new QuerySearchGuard(SearchPolicy.builder()
                 .query(query -> query.requireValidator(true))
                 .build());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)

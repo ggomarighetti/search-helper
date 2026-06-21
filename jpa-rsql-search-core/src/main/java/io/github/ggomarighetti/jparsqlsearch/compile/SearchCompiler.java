@@ -24,8 +24,8 @@ public final class SearchCompiler {
     private static final String POLICY_MUST_NOT_BE_NULL = "policy must not be null";
 
     private final RsqlSearchGuard rsqlSearchGuard;
-    private final SearchQueryGuard searchQueryGuard;
-    private final SearchPageableGuard searchPageableGuard;
+    private final QuerySearchGuard searchQueryGuard;
+    private final PageableSearchGuard searchPageableGuard;
     private final SearchPolicy policy;
 
     /**
@@ -52,8 +52,8 @@ public final class SearchCompiler {
         Objects.requireNonNull(engine, "engine must not be null");
         this.policy = Objects.requireNonNull(policy, POLICY_MUST_NOT_BE_NULL);
         this.rsqlSearchGuard = new RsqlSearchGuard(engine, policy, definitionValidators);
-        this.searchQueryGuard = new SearchQueryGuard(policy);
-        this.searchPageableGuard = new SearchPageableGuard(policy);
+        this.searchQueryGuard = new QuerySearchGuard(policy);
+        this.searchPageableGuard = new PageableSearchGuard(policy);
     }
 
     /**
@@ -116,12 +116,12 @@ public final class SearchCompiler {
                 specification(filter, query, definition, protection, specifications);
         Pageable validatedPageable =
                 searchPageableGuard.pageable(pageable, definition, protection);
-        if (SearchSpecificationSorting.requiresCriteriaSorting(pageable, definition)) {
-            specification = SearchSpecificationSorting.apply(
+        if (CriteriaSortApplicator.requiresCriteriaSorting(pageable, definition)) {
+            specification = CriteriaSortApplicator.apply(
                     specification,
                     pageable.getSort(),
                     definition);
-            validatedPageable = SearchSpecificationSorting.withoutSort(validatedPageable);
+            validatedPageable = CriteriaSortApplicator.withoutSort(validatedPageable);
         }
         protection.completeRequest();
         return new CompiledSearch<>(specification, validatedPageable);

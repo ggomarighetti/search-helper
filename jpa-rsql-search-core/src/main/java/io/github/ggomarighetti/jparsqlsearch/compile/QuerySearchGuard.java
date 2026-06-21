@@ -10,17 +10,17 @@ import java.util.Objects;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-final class SearchQueryGuard {
+final class QuerySearchGuard {
     private static final String DEFINITION_MUST_NOT_BE_NULL = "definition must not be null";
     private static final String POLICY_MUST_NOT_BE_NULL = "policy must not be null";
 
     private final SearchPolicy policy;
 
-    SearchQueryGuard() {
+    QuerySearchGuard() {
         this(SearchPolicy.defaults());
     }
 
-    SearchQueryGuard(SearchPolicy policy) {
+    QuerySearchGuard(SearchPolicy policy) {
         this.policy = Objects.requireNonNull(policy, POLICY_MUST_NOT_BE_NULL);
     }
 

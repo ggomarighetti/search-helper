@@ -20,7 +20,7 @@ class SearchPageablePropertyTest {
 
     @Test
     void arbitraryValidSpringPageableNeverEscapesUnexpectedThrowable() {
-        SearchPageableGuard guard = new SearchPageableGuard();
+        PageableSearchGuard guard = new PageableSearchGuard();
         SearchDefinition<Product> definition = SearchPropertyFixtures.pageableDefinition();
         PageableInputGenerator generator = new PageableInputGenerator(0xA08_101L);
 
@@ -38,7 +38,7 @@ class SearchPageablePropertyTest {
 
     @Test
     void acceptedSortsTranslatePublicSelectorsToInternalPaths() {
-        SearchPageableGuard guard = new SearchPageableGuard();
+        PageableSearchGuard guard = new PageableSearchGuard();
         SearchDefinition<Product> definition = SearchPropertyFixtures.pageableDefinition();
         PageableInputGenerator generator = new PageableInputGenerator(0xA08_102L);
 

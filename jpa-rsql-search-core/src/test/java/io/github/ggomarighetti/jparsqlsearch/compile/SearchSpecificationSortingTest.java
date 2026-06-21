@@ -30,10 +30,10 @@ class SearchSpecificationSortingTest {
         SearchDefinition<TestTypes.Product> definition = definition();
         Pageable pageable = PageRequest.of(2, 25, Sort.by("email", "expiresAt"));
 
-        assertTrue(SearchSpecificationSorting.requiresCriteriaSorting(pageable, definition));
-        assertFalse(SearchSpecificationSorting.requiresCriteriaSorting(
+        assertTrue(CriteriaSortApplicator.requiresCriteriaSorting(pageable, definition));
+        assertFalse(CriteriaSortApplicator.requiresCriteriaSorting(
                 PageRequest.of(2, 25, Sort.by("email")), definition));
-        assertTrue(SearchSpecificationSorting.withoutSort(pageable).getSort().isUnsorted());
+        assertTrue(CriteriaSortApplicator.withoutSort(pageable).getSort().isUnsorted());
     }
 
     @Test
@@ -49,7 +49,7 @@ class SearchSpecificationSortingTest {
         RecordingCriteriaBuilder builder = new RecordingCriteriaBuilder();
         Root<TestTypes.Product> root = namedRoot("root", builder);
 
-        Predicate actual = SearchSpecificationSorting.apply(source, sort, definition)
+        Predicate actual = CriteriaSortApplicator.apply(source, sort, definition)
                 .toPredicate(root, contentQuery.proxy(), builder.proxy());
 
         assertSame(predicate, actual);
@@ -59,13 +59,13 @@ class SearchSpecificationSortingTest {
         assertEquals(List.of("asc", "desc", "asc", "asc"), builder.orderCalls);
 
         RecordingCriteriaQuery<Long> countQuery = new RecordingCriteriaQuery<>(Long.class);
-        SearchSpecificationSorting.apply(source, sort, definition)
+        CriteriaSortApplicator.apply(source, sort, definition)
                 .toPredicate(root, countQuery.proxy(), builder.proxy());
 
         assertTrue(countQuery.orders.isEmpty());
 
         RecordingCriteriaQuery<Long> primitiveCountQuery = new RecordingCriteriaQuery<>(long.class);
-        SearchSpecificationSorting.apply(source, sort, definition)
+        CriteriaSortApplicator.apply(source, sort, definition)
                 .toPredicate(root, primitiveCountQuery.proxy(), builder.proxy());
 
         assertTrue(primitiveCountQuery.orders.isEmpty());
@@ -80,7 +80,7 @@ class SearchSpecificationSortingTest {
                 new RecordingCriteriaQuery<>(TestTypes.Product.class);
         RecordingCriteriaBuilder builder = new RecordingCriteriaBuilder();
 
-        SearchSpecificationSorting.apply(source, Sort.by(Sort.Order.asc("email")), definition)
+        CriteriaSortApplicator.apply(source, Sort.by(Sort.Order.asc("email")), definition)
                 .toPredicate(namedRoot("root", builder), contentQuery.proxy(), builder.proxy());
 
         assertEquals(1, contentQuery.orders.size());

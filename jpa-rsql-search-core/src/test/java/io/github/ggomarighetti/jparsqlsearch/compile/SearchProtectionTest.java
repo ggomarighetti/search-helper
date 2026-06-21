@@ -600,7 +600,7 @@ class SearchProtectionTest {
         SearchPolicy policy = SearchPolicy.builder()
                 .query(query -> query.requireValidator(true))
                 .build();
-        SearchQueryGuard guard = new SearchQueryGuard(policy);
+        QuerySearchGuard guard = new QuerySearchGuard(policy);
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder(policy)
                 .entity(TestTypes.Product.class)
                 .query(query -> query.specification(term -> Specification.unrestricted()))
@@ -618,7 +618,7 @@ class SearchProtectionTest {
         SearchPolicy policy = SearchPolicy.builder()
                 .sorting(sorting -> sorting.allowRelationSorting(false))
                 .build();
-        SearchPageableGuard guard = new SearchPageableGuard(policy);
+        PageableSearchGuard guard = new PageableSearchGuard(policy);
         SearchDefinition<Product> definition = SearchDefinition.builder(policy)
                 .entity(Product.class)
                 .fields(fields -> fields.add("supplierName", String.class)
