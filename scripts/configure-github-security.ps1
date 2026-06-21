@@ -30,7 +30,6 @@ if ($PSCmdlet.ShouldProcess($Repository, "restrict Actions to the reviewed allow
             "codecov/codecov-action@*"
             "cue-lang/setup-cue@*"
             "google/clusterfuzzlite/*@*"
-            "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@*"
             "googleapis/release-please-action@*"
             "ossf/scorecard-action@*"
         )
