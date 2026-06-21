@@ -33,9 +33,6 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  MAVEN_ARGS: -B -ntp -nsu
-
 jobs:
   release:
     name: Release Maven Central
@@ -91,8 +88,10 @@ jobs:
           fi
 
           if [[ "${version}" == *-SNAPSHOT ]]; then
-            echo "release=false" >> "$GITHUB_OUTPUT"
-            echo "version=${version}" >> "$GITHUB_OUTPUT"
+            {
+              echo "release=false"
+              echo "version=${version}"
+            } >> "$GITHUB_OUTPUT"
             echo "::notice::pom.xml is at ${version}; skipping release publication."
             exit 0
           fi
@@ -104,9 +103,11 @@ jobs:
           fi
 
           if [[ "${tag_exists}" == "true" && "${ALLOW_EXISTING_TAG}" != "true" ]]; then
-            echo "release=false" >> "$GITHUB_OUTPUT"
-            echo "version=${version}" >> "$GITHUB_OUTPUT"
-            echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+            {
+              echo "release=false"
+              echo "version=${version}"
+              echo "tag=${tag}"
+            } >> "$GITHUB_OUTPUT"
             echo "::notice::${tag} already exists; skipping publication."
             exit 0
           fi
@@ -121,10 +122,12 @@ jobs:
             fi
           fi
 
-          echo "release=true" >> "$GITHUB_OUTPUT"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          echo "tag_exists=${tag_exists}" >> "$GITHUB_OUTPUT"
+          {
+            echo "release=true"
+            echo "version=${version}"
+            echo "tag=${tag}"
+            echo "tag_exists=${tag_exists}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Validate release metadata
         if: steps.release.outputs.release == 'true'
@@ -155,13 +158,13 @@ jobs:
 
       - name: Verify release build
         if: steps.release.outputs.release == 'true'
-        run: ./mvnw $MAVEN_ARGS -Pcoverage,release,sbom,reproducible verify
+        run: ./mvnw -B -ntp -nsu -Pcoverage,release,sbom,reproducible verify
 
       - name: Stage Maven artifacts
         if: steps.release.outputs.release == 'true'
         run: |
           rm -rf target/staging-deploy
-          ./mvnw $MAVEN_ARGS -Ppublication,sbom,reproducible -DskipTests deploy
+          ./mvnw -B -ntp -nsu -Ppublication,sbom,reproducible -DskipTests deploy
 
       - name: Inspect staged artifacts
         if: steps.release.outputs.release == 'true'
@@ -243,11 +246,11 @@ jobs:
 
       - name: Validate JReleaser configuration
         if: steps.release.outputs.release == 'true'
-        run: ./mvnw $MAVEN_ARGS -N jreleaser:config
+        run: ./mvnw -B -ntp -nsu -N jreleaser:config
 
       - name: JReleaser dry-run
         if: steps.release.outputs.release == 'true'
-        run: ./mvnw $MAVEN_ARGS -N jreleaser:deploy -Djreleaser.dry.run=true
+        run: ./mvnw -B -ntp -nsu -N jreleaser:deploy -Djreleaser.dry.run=true
 
       - name: Create signed tag
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true' && steps.release.outputs.tag_exists != 'true'
@@ -286,14 +289,14 @@ jobs:
 
       - name: Publish to GitHub Packages
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
-        run: ./mvnw $MAVEN_ARGS -Ppublication -DskipTests "-DaltDeploymentRepository=github::default::https://maven.pkg.github.com/${{ github.repository }}" deploy
+        run: ./mvnw -B -ntp -nsu -Ppublication -DskipTests "-DaltDeploymentRepository=github::default::https://maven.pkg.github.com/${{ github.repository }}" deploy
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Publish to Maven Central
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
-        run: ./mvnw $MAVEN_ARGS -N jreleaser:deploy
+        run: ./mvnw -B -ntp -nsu -N jreleaser:deploy
 
       - name: Extract release notes
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
