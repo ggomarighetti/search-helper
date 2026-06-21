@@ -11,7 +11,7 @@ final class PathResolver {
     }
 
     static ResolvedPath resolve(Class<?> entity, String selector, String path, SearchPolicy.Paths limits) {
-        String[] segments = SearchPath.segments(path);
+        String[] segments = PathSegments.split(path);
         validateDepth(selector, path, limits, segments.length);
         Class<?> current = entity;
         boolean traversesCollection = false;

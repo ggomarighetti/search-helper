@@ -1,7 +1,6 @@
 package io.github.ggomarighetti.jparsqlsearch.path;
 
 import io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy;
-import java.util.Objects;
 import java.util.Set;
 import org.springframework.util.ClassUtils;
 
@@ -95,7 +94,7 @@ public final class SearchPath {
      * @return path segments including malformed empty segments
      */
     public static String[] segments(String path) {
-        return Objects.requireNonNull(path, "path must not be null").split("\\.", -1);
+        return PathSegments.split(path);
     }
 
     /**
