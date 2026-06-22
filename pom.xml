@@ -245,7 +245,7 @@
         <version>${jreleaser.maven.plugin.version}</version>
         <inherited>false</inherited>
         <configuration>
-          <configFile>${maven.multiModuleProjectDirectory}/jreleaser.yml</configFile>
+          <configFile>${maven.multiModuleProjectDirectory}/.github/release/jreleaser.yml</configFile>
         </configuration>
       </plugin>
     </plugins>
