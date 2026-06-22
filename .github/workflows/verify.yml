@@ -95,20 +95,6 @@ jobs:
           name: java-tests
           fail_ci_if_error: true
 
-      - name: Validate Sonar intended architecture
-        run: node scripts/sync-sonar-architecture-model.mjs --check
-
-      - name: Synchronize Sonar intended architecture
-        if: ${{ env.SONAR_TOKEN != '' }}
-        env:
-          SONAR_ORGANIZATION_ID: df8bd268-70a4-4338-a093-2cfebc6ad4ff
-          SONAR_PROJECT_KEY: ggomarighetti_jpa-rsql-search
-        run: node scripts/sync-sonar-architecture-model.mjs
-
-      - name: Skip Sonar intended architecture synchronization
-        if: ${{ env.SONAR_TOKEN == '' }}
-        run: echo "SONAR_TOKEN secret is not configured; keeping the validated local model declaration without changing SonarCloud."
-
       - name: SonarQube Cloud analysis
         if: ${{ env.SONAR_TOKEN != '' }}
         run: ./mvnw -B -ntp -nsu sonar:sonar

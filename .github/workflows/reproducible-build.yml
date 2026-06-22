@@ -30,4 +30,4 @@ jobs:
           cache: maven
 
       - name: Verify reproducible artifacts
-        run: ./scripts/verify-reproducible-build.sh
+        run: ./.github/scripts/verify-reproducible-build.sh
