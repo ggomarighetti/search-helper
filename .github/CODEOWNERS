@@ -2,6 +2,7 @@
 
 /.github/ @ggomarighetti
 /SECURITY.md @ggomarighetti
+/SECURITY-INSIGHTS.yml @ggomarighetti
 /docs/ @ggomarighetti
 /pom.xml @ggomarighetti
 /.github/release/ @ggomarighetti
