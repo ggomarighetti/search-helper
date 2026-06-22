@@ -1,3 +1,7 @@
+package io.github.ggomarighetti.jparsqlsearch.fuzz;
+
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.FuzzTest;
 import io.github.ggomarighetti.jparsqlsearch.compile.SearchCompiler;
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition;
 import io.github.ggomarighetti.jparsqlsearch.policy.SearchPolicy;
@@ -7,7 +11,7 @@ import io.github.ggomarighetti.jparsqlsearch.rsql.validation.RsqlFilterValidatio
 import java.nio.charset.StandardCharsets;
 import org.springframework.data.domain.PageRequest;
 
-public final class RsqlSearchFuzzer {
+class RsqlSearchFuzzTest {
     private static final int MAX_INPUT_BYTES = 16_384;
     private static final SearchCompiler COMPILER =
             new SearchCompiler(PerplexhubRsqlEngines.defaults(), SearchPolicy.defaults());
@@ -22,15 +26,11 @@ public final class RsqlSearchFuzzer {
             .paging()
             .build();
 
-    private RsqlSearchFuzzer() {
-    }
-
-    public static void fuzzerTestOneInput(byte[] bytes) {
-        if (bytes.length > MAX_INPUT_BYTES) {
-            return;
-        }
-
+    @FuzzTest(maxDuration = "2m")
+    void compileUntrustedRsql(FuzzedDataProvider data) {
+        byte[] bytes = data.consumeBytes(MAX_INPUT_BYTES);
         String input = new String(bytes, StandardCharsets.UTF_8);
+
         try {
             COMPILER.compile(input, null, PAGE_REQUEST, DEFINITION);
         } catch (RsqlFilterValidationException | SearchProtectionException expected) {
@@ -38,7 +38,7 @@ public final class RsqlSearchFuzzer {
         }
     }
 
-    public static final class Product {
+    static final class Product {
         private String sku;
         private String name;
         private Integer stock;

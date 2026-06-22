@@ -839,7 +839,7 @@ control mapping is in [OPENSSF.md](OPENSSF.md).
   modules, with `jpa-rsql-search-spring-boot-starter` as the usual entry point;
 - the public API follows Semantic Versioning;
 - Spring Boot configuration metadata is included in the generated JAR;
-- the implementation is covered by unit, property, Jazzer/ClusterFuzzLite, and
+- the implementation is covered by unit, property, Jazzer, and
   PostgreSQL integration tests;
 - Scorecard, CodeQL, OSV-Scanner, dependency review, SBOM generation, and
   reproducible-build checks run in GitHub Actions.

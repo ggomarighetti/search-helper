@@ -29,7 +29,6 @@ if ($PSCmdlet.ShouldProcess($Repository, "restrict Actions to the reviewed allow
         patterns_allowed = @(
             "codecov/codecov-action@*"
             "cue-lang/setup-cue@*"
-            "google/clusterfuzzlite/*@*"
             "googleapis/release-please-action@*"
             "ossf/scorecard-action@*"
         )

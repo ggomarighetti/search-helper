@@ -1,0 +1,64 @@
+name: Jazzer Fuzzing
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "11 2 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: Fuzz RSQL compiler
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      JAZZER_FUZZ: "1"
+      JAZZER_MAX_DURATION: ${{ github.event_name == 'schedule' && '15m' || '2m' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Run Jazzer
+        run: >
+          ./mvnw -B -ntp -nsu
+          -pl integration-tests
+          -am
+          -Dtest=RsqlSearchFuzzTest
+          -Dsurefire.failIfNoSpecifiedTests=false
+          "-Djazzer.instrument=io.github.ggomarighetti.jparsqlsearch.**"
+          test
+
+      - name: Upload fuzzing corpus and findings
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jazzer-rsql-results
+          path: |
+            integration-tests/.cifuzz-corpus/
+            integration-tests/src/test/resources/io/github/ggomarighetti/jparsqlsearch/fuzz/RsqlSearchFuzzTestInputs/
+          if-no-files-found: ignore
+          retention-days: 14
