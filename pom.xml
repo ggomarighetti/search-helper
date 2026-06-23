@@ -21,7 +21,7 @@
     <module>jpa-rsql-search-jpa-validation</module>
     <module>jpa-rsql-search-perplexhub</module>
     <module>jpa-rsql-search-spring-boot-starter</module>
-    <module>integration-tests</module>
+    <module>integration</module>
   </modules>
 
   <licenses>
@@ -74,7 +74,7 @@
     <sonar.projectName>jpa-rsql-search</sonar.projectName>
     <sonar.organization>ggomarighetti</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/integration-tests/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/integration/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.junit.reportPaths>**/target/surefire-reports,**/target/failsafe-reports</sonar.junit.reportPaths>
   </properties>
 
@@ -245,7 +245,7 @@
         <version>${jreleaser.maven.plugin.version}</version>
         <inherited>false</inherited>
         <configuration>
-          <configFile>${maven.multiModuleProjectDirectory}/jreleaser.yml</configFile>
+          <configFile>${maven.multiModuleProjectDirectory}/.github/release/jreleaser.yml</configFile>
         </configuration>
       </plugin>
     </plugins>

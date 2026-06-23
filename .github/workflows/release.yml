@@ -7,11 +7,11 @@ on:
     paths:
       - pom.xml
       - jpa-rsql-search-*/pom.xml
-      - integration-tests/pom.xml
+      - integration/pom.xml
       - CHANGELOG.md
-      - jreleaser.yml
-      - release-please-config.json
-      - .release-please-manifest.json
+      - .github/release/jreleaser.yml
+      - .github/release/release-please-config.json
+      - .github/release/release-please-manifest.json
       - .github/workflows/release.yml
   workflow_dispatch:
     inputs:

@@ -15,7 +15,7 @@ JPA specifications.
 - `jpa-rsql-search-perplexhub`: Perplexhub parser/backend integration.
 - `jpa-rsql-search-spring-boot-starter`: auto-configuration and configuration
   metadata.
-- `integration-tests`: architecture, consumer, and PostgreSQL verification; it
+- `integration`: architecture, consumer, and PostgreSQL verification; it
   is never published.
 
 The intended dependency direction is:

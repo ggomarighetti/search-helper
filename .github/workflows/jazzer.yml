@@ -45,7 +45,7 @@ jobs:
       - name: Run Jazzer
         run: >
           ./mvnw -B -ntp -nsu
-          -pl integration-tests
+          -pl integration
           -am
           -Dtest=RsqlSearchFuzzTest
           -Dsurefire.failIfNoSpecifiedTests=false
@@ -58,7 +58,7 @@ jobs:
         with:
           name: jazzer-rsql-results
           path: |
-            integration-tests/.cifuzz-corpus/
-            integration-tests/src/test/resources/io/github/ggomarighetti/jparsqlsearch/fuzz/RsqlSearchFuzzTestInputs/
+            integration/.cifuzz-corpus/
+            integration/src/test/resources/io/github/ggomarighetti/jparsqlsearch/fuzz/RsqlSearchFuzzTestInputs/
           if-no-files-found: ignore
           retention-days: 14

@@ -1,4 +1,4 @@
 target/
 .idea/
 *.iml
-/integration-tests/.cifuzz-corpus/
+/integration/.cifuzz-corpus/

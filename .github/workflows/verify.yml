@@ -61,11 +61,11 @@ jobs:
             target/bom.json
             jpa-rsql-search-*/target/bom.json
             jpa-rsql-search-*/target/site/jacoco/
-            integration-tests/target/site/jacoco-aggregate/
+            integration/target/site/jacoco-aggregate/
             jpa-rsql-search-*/target/surefire-reports/
             jpa-rsql-search-*/target/failsafe-reports/
-            integration-tests/target/surefire-reports/
-            integration-tests/target/failsafe-reports/
+            integration/target/surefire-reports/
+            integration/target/failsafe-reports/
           if-no-files-found: ignore
 
       - name: Skip Codecov uploads
@@ -77,7 +77,7 @@ jobs:
         uses: codecov/codecov-action@a99c28d3f0da835de33ff2feb2e15691c7b9641f
         with:
           token: ${{ env.CODECOV_TOKEN }}
-          files: integration-tests/target/site/jacoco-aggregate/jacoco.xml
+          files: integration/target/site/jacoco-aggregate/jacoco.xml
           disable_search: true
           flags: java
           name: java-coverage
@@ -88,7 +88,7 @@ jobs:
         uses: codecov/codecov-action@a99c28d3f0da835de33ff2feb2e15691c7b9641f
         with:
           token: ${{ env.CODECOV_TOKEN }}
-          files: jpa-rsql-search-*/target/surefire-reports/*.xml,jpa-rsql-search-*/target/failsafe-reports/*.xml,integration-tests/target/surefire-reports/*.xml,integration-tests/target/failsafe-reports/*.xml
+          files: jpa-rsql-search-*/target/surefire-reports/*.xml,jpa-rsql-search-*/target/failsafe-reports/*.xml,integration/target/surefire-reports/*.xml,integration/target/failsafe-reports/*.xml
           disable_search: true
           report_type: test_results
           flags: java

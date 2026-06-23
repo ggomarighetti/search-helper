@@ -18,7 +18,7 @@ build_and_hash() {
        -o -path '*/target/*.pom' \
        -o -path '*/target/*-cyclonedx.json' \
        -o -path '*/target/*.buildinfo' \) \
-    ! -path './integration-tests/target/*' \
+    ! -path './integration/target/*' \
     -print0 \
     | sort -z \
     | xargs -0 sha256sum \

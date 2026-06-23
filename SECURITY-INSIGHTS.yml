@@ -1,8 +1,8 @@
 header:
   schema-version: 2.2.0
-  last-updated: '2026-06-21'
-  last-reviewed: '2026-06-21'
-  url: https://raw.githubusercontent.com/ggomarighetti/jpa-rsql-search/refs/heads/master/security-insights.yml
+  last-updated: '2026-06-22'
+  last-reviewed: '2026-06-22'
+  url: https://raw.githubusercontent.com/ggomarighetti/jpa-rsql-search/refs/heads/master/SECURITY-INSIGHTS.yml
   comment: |
     Single-repository Security Insights document for jpa-rsql-search.
 
@@ -18,10 +18,10 @@ project:
   documentation:
     quickstart-guide: https://github.com/ggomarighetti/jpa-rsql-search#quick-example
     detailed-guide: https://github.com/ggomarighetti/jpa-rsql-search#api-reference
-    code-of-conduct: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/CODE_OF_CONDUCT.md
+    code-of-conduct: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/CODE_OF_CONDUCT.md
     design: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/ARCHITECTURE.md
     release-process: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/RELEASE_SECURITY.md
-    support-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/SUPPORT.md
+    support-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/SUPPORT.md
     signature-verification: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/RELEASE_SECURITY.md
   repositories:
     - name: jpa-rsql-search
@@ -35,7 +35,7 @@ project:
       name: jpa-rsql-search maintainer
       social: https://github.com/ggomarighetti
       primary: true
-    policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/SECURITY.md
+    policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/SECURITY.md
     in-scope:
       - authorization bypass caused by search compilation
       - denial of service caused by unbounded input processing
@@ -59,10 +59,10 @@ repository:
       social: https://github.com/ggomarighetti
       primary: true
   documentation:
-    contributing-guide: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/CONTRIBUTING.md
-    review-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/CONTRIBUTING.md#review
-    security-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/SECURITY.md
-    governance: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/GOVERNANCE.md
+    contributing-guide: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/CONTRIBUTING.md
+    review-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/CONTRIBUTING.md#review
+    security-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/SECURITY.md
+    governance: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/GOVERNANCE.md
     dependency-management-policy: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/docs/DEPENDENCY_POLICY.md
   license:
     url: https://github.com/ggomarighetti/jpa-rsql-search/blob/master/LICENSE

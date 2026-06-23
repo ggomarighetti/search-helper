@@ -7,7 +7,7 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/ggomarighetti/jpa-rsql-search/badge)](https://scorecard.dev/viewer/?uri=github.com/ggomarighetti/jpa-rsql-search)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-007396)](https://adoptium.net/)
 [![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.x-6DB33F)](https://spring.io/projects/spring-boot)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: stable](https://img.shields.io/badge/status-stable-brightgreen)](#project-status)
 
 `jpa-rsql-search` is a small contract layer for Spring applications that accept
@@ -827,8 +827,8 @@ disclosure process are documented in [SECURITY.md](SECURITY.md).
 
 Release assets include SHA-256 checksums, CycloneDX SBOMs, build information,
 and Sigstore attestations. Verification instructions are in
-[RELEASE_SECURITY.md](RELEASE_SECURITY.md), and the project's OpenSSF
-control mapping is in [OPENSSF.md](OPENSSF.md).
+[RELEASE_SECURITY.md](docs/RELEASE_SECURITY.md), and the project's OpenSSF
+control mapping is in [OPENSSF.md](docs/OPENSSF.md).
 
 ## Project Status
 
@@ -861,7 +861,7 @@ Generate JaCoCo coverage for unit and integration tests:
 ```
 
 The aggregate XML report is written to
-`integration-tests/target/site/jacoco-aggregate/jacoco.xml`. CI uploads JaCoCo
+`integration/target/site/jacoco-aggregate/jacoco.xml`. CI uploads JaCoCo
 and JUnit results to Codecov, and runs SonarQube Cloud analysis when the
 repository has a `SONAR_TOKEN` secret configured.
 
@@ -885,4 +885,4 @@ policy, Conventional Commit rules, and required DCO sign-off.
 
 ## License
 
-Released under the [MIT License](../LICENSE).
+Released under the [MIT License](LICENSE).

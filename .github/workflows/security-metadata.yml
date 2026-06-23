@@ -39,7 +39,7 @@ jobs:
             --proto-redir '=https' \
             "https://raw.githubusercontent.com/ossf/security-insights/701ac2a02ef17fc8b316f5df685428773c51372a/spec/schema.cue" \
             --output "${schema}"
-          cue vet -d '#SecurityInsights' "${schema}" security-insights.yml
+          cue vet -d '#SecurityInsights' "${schema}" SECURITY-INSIGHTS.yml
 
   actionlint:
     name: Validate GitHub Actions

@@ -53,7 +53,7 @@ be documented with scope, rationale, owner, and a review date. Findings that do
 not affect this project should be documented as non-exploitable and, when a
 release contains the affected component, represented in VEX data.
 
-See [Dependency Policy](DEPENDENCY_POLICY.md) for dependency and license
+See [Dependency Policy](docs/DEPENDENCY_POLICY.md) for dependency and license
 handling.
 
 ## Release verification
@@ -63,4 +63,4 @@ publish checksums, CycloneDX SBOMs, and GitHub artifact attestations when the
 release workflow is used.
 
 Verification instructions are in
-[Release Security](RELEASE_SECURITY.md).
+[Release Security](docs/RELEASE_SECURITY.md).
