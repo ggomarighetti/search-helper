@@ -5,9 +5,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 public final class PostgresTestEnvironment {
-    private static final String DATABASE = "jpa_rsql_search";
-    private static final String USERNAME = "jpa_rsql_search";
-    private static final String PASSWORD = "jpa_rsql_search";
+    private static final String DATABASE = "rsql_jpa_search";
+    private static final String USERNAME = "rsql_jpa_search";
+    private static final String PASSWORD = "rsql_jpa_search";
 
     private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine")
             .withDatabaseName(DATABASE)
