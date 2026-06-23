@@ -6,7 +6,12 @@ on:
       - master
     paths:
       - pom.xml
-      - jpa-rsql-search-*/pom.xml
+      - api/pom.xml
+      - rsql-spi/pom.xml
+      - core/pom.xml
+      - jpa-validation/pom.xml
+      - perplexhub/pom.xml
+      - spring-boot-starter/pom.xml
       - integration/pom.xml
       - CHANGELOG.md
       - .github/release/jreleaser.yml

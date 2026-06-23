@@ -59,11 +59,31 @@ jobs:
           name: test-and-coverage-reports
           path: |
             target/bom.json
-            jpa-rsql-search-*/target/bom.json
-            jpa-rsql-search-*/target/site/jacoco/
+            api/target/bom.json
+            rsql-spi/target/bom.json
+            core/target/bom.json
+            jpa-validation/target/bom.json
+            perplexhub/target/bom.json
+            spring-boot-starter/target/bom.json
+            api/target/site/jacoco/
+            rsql-spi/target/site/jacoco/
+            core/target/site/jacoco/
+            jpa-validation/target/site/jacoco/
+            perplexhub/target/site/jacoco/
+            spring-boot-starter/target/site/jacoco/
             integration/target/site/jacoco-aggregate/
-            jpa-rsql-search-*/target/surefire-reports/
-            jpa-rsql-search-*/target/failsafe-reports/
+            api/target/surefire-reports/
+            rsql-spi/target/surefire-reports/
+            core/target/surefire-reports/
+            jpa-validation/target/surefire-reports/
+            perplexhub/target/surefire-reports/
+            spring-boot-starter/target/surefire-reports/
+            api/target/failsafe-reports/
+            rsql-spi/target/failsafe-reports/
+            core/target/failsafe-reports/
+            jpa-validation/target/failsafe-reports/
+            perplexhub/target/failsafe-reports/
+            spring-boot-starter/target/failsafe-reports/
             integration/target/surefire-reports/
             integration/target/failsafe-reports/
           if-no-files-found: ignore
@@ -88,7 +108,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           token: ${{ env.CODECOV_TOKEN }}
-          files: jpa-rsql-search-*/target/surefire-reports/*.xml,jpa-rsql-search-*/target/failsafe-reports/*.xml,integration/target/surefire-reports/*.xml,integration/target/failsafe-reports/*.xml
+          files: api/target/surefire-reports/*.xml,api/target/failsafe-reports/*.xml,rsql-spi/target/surefire-reports/*.xml,rsql-spi/target/failsafe-reports/*.xml,core/target/surefire-reports/*.xml,core/target/failsafe-reports/*.xml,jpa-validation/target/surefire-reports/*.xml,jpa-validation/target/failsafe-reports/*.xml,perplexhub/target/surefire-reports/*.xml,perplexhub/target/failsafe-reports/*.xml,spring-boot-starter/target/surefire-reports/*.xml,spring-boot-starter/target/failsafe-reports/*.xml,integration/target/surefire-reports/*.xml,integration/target/failsafe-reports/*.xml
           disable_search: true
           report_type: test_results
           flags: java

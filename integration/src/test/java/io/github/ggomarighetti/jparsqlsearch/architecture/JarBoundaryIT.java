@@ -15,13 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class JarBoundaryIT {
-    private static final List<String> PRODUCT_MODULES = List.of(
-            "jpa-rsql-search-api",
-            "jpa-rsql-search-rsql-spi",
-            "jpa-rsql-search-core",
-            "jpa-rsql-search-jpa-validation",
-            "jpa-rsql-search-perplexhub",
-            "jpa-rsql-search-spring-boot-starter");
+    private static final List<ProductModule> PRODUCT_MODULES = List.of(
+            new ProductModule("api", "jpa-rsql-search-api"),
+            new ProductModule("rsql-spi", "jpa-rsql-search-rsql-spi"),
+            new ProductModule("core", "jpa-rsql-search-core"),
+            new ProductModule("jpa-validation", "jpa-rsql-search-jpa-validation"),
+            new ProductModule("perplexhub", "jpa-rsql-search-perplexhub"),
+            new ProductModule("spring-boot-starter", "jpa-rsql-search-spring-boot-starter"));
 
     @Test
     void productJarsHaveUniqueClassesAndPackages() throws IOException {
@@ -29,7 +29,7 @@ class JarBoundaryIT {
         Map<String, String> classOwners = new LinkedHashMap<>();
         Map<String, String> packageOwners = new LinkedHashMap<>();
 
-        for (String module : PRODUCT_MODULES) {
+        for (ProductModule module : PRODUCT_MODULES) {
             Path jar = productJar(root, module);
             assertTrue(Files.isRegularFile(jar), () -> "missing product jar " + jar);
             try (JarFile archive = new JarFile(jar.toFile())) {
@@ -39,10 +39,14 @@ class JarBoundaryIT {
                         .filter(name -> name.endsWith(".class"))
                         .filter(name -> !name.equals("module-info.class"))
                         .forEach(name -> {
-                            registerOwner(classOwners, name, module, "class");
+                            registerOwner(classOwners, name, module.artifactId(), "class");
                             int separator = name.lastIndexOf('/');
                             if (separator > 0) {
-                                registerOwner(packageOwners, name.substring(0, separator), module, "package");
+                                registerOwner(
+                                        packageOwners,
+                                        name.substring(0, separator),
+                                        module.artifactId(),
+                                        "package");
                             }
                         });
             }
@@ -55,16 +59,17 @@ class JarBoundaryIT {
     @Test
     void starterCarriesSpringBootDiscoveryMetadata() throws IOException {
         Path root = Path.of(System.getProperty("workspace.root"));
-        try (JarFile starter = new JarFile(productJar(root, "jpa-rsql-search-spring-boot-starter").toFile())) {
+        ProductModule starterModule = PRODUCT_MODULES.get(PRODUCT_MODULES.size() - 1);
+        try (JarFile starter = new JarFile(productJar(root, starterModule).toFile())) {
             assertNotNull(starter.getEntry(
                     "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"));
         }
     }
 
-    private static Path productJar(Path root, String module) {
-        return root.resolve(module)
+    private static Path productJar(Path root, ProductModule module) {
+        return root.resolve(module.directory())
                 .resolve("target")
-                .resolve(module + "-2.0.0-SNAPSHOT.jar");
+                .resolve(module.artifactId() + "-2.0.0-SNAPSHOT.jar");
     }
 
     private static void registerOwner(
@@ -76,5 +81,8 @@ class JarBoundaryIT {
         if (previous != null && !previous.equals(module)) {
             fail("%s '%s' exists in both %s and %s".formatted(kind, entry, previous, module));
         }
+    }
+
+    private record ProductModule(String directory, String artifactId) {
     }
 }

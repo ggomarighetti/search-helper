@@ -12,12 +12,12 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 class ArchitectureRulesTest {
     private static final List<String> PRODUCT_MODULES = List.of(
-            "jpa-rsql-search-api",
-            "jpa-rsql-search-rsql-spi",
-            "jpa-rsql-search-core",
-            "jpa-rsql-search-jpa-validation",
-            "jpa-rsql-search-perplexhub",
-            "jpa-rsql-search-spring-boot-starter");
+            "api",
+            "rsql-spi",
+            "core",
+            "jpa-validation",
+            "perplexhub",
+            "spring-boot-starter");
 
     private final JavaClasses classes =
             new ClassFileImporter()
