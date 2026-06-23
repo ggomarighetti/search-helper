@@ -70,7 +70,8 @@
     <cyclonedx.maven.plugin.version>2.9.2</cyclonedx.maven.plugin.version>
     <maven.artifact.plugin.version>3.6.1</maven.artifact.plugin.version>
     <jazzer.version>0.30.0</jazzer.version>
-    <sonar.projectKey>ggomarighetti_rsql-jpa-search</sonar.projectKey>
+    <!-- Stable external key retained to preserve SonarQube Cloud analysis history. -->
+    <sonar.projectKey>ggomarighetti_jpa-rsql-search</sonar.projectKey>
     <sonar.projectName>rsql-jpa-search</sonar.projectName>
     <sonar.organization>ggomarighetti</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
