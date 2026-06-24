@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>consumer</groupId>
   <artifactId>starter-consumer</artifactId>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
   </properties>
@@ -11,7 +11,7 @@
     <dependency>
       <groupId>io.github.ggomarighetti</groupId>
       <artifactId>rsql-jpa-search-spring-boot-starter</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
+      <version>2.0.0</version>
     </dependency>
   </dependencies>
 </project>

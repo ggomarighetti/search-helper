@@ -85,7 +85,13 @@ class JarBoundaryIT {
     private static Path productJar(Path root, ProductModule module) {
         return root.resolve(module.directory())
                 .resolve("target")
-                .resolve(module.artifactId() + "-2.0.0-SNAPSHOT.jar");
+                .resolve(module.artifactId() + "-" + projectVersion() + ".jar");
+    }
+
+    private static String projectVersion() {
+        String version = System.getProperty("project.version");
+        assertNotNull(version, "project.version system property must be configured");
+        return version;
     }
 
     private static void registerOwner(
