@@ -61,6 +61,7 @@ jobs:
             --env "BAD_BUILD_CHECK=true" \
             --env "KEEP_UNAFFECTED_FUZZ_TARGETS=true" \
             --env "LOW_DISK_SPACE=true" \
+            --env "NO_CLUSTERFUZZ_DEPLOYMENT=true" \
             "$BUILD_FUZZERS_IMAGE"
 
       - name: Run fuzzers
@@ -85,4 +86,5 @@ jobs:
             --env "OUTPUT_SARIF=true" \
             --env "PARALLEL_FUZZING=true" \
             --env "LOW_DISK_SPACE=true" \
+            --env "NO_CLUSTERFUZZ_DEPLOYMENT=true" \
             "$RUN_FUZZERS_IMAGE"
