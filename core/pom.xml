@@ -23,6 +23,11 @@
       <artifactId>rsql-jpa-search-rsql-spi</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.github.nstdio</groupId>
+      <artifactId>rsql-parser</artifactId>
+      <version>${rsql.parser.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>
@@ -33,6 +38,10 @@
     <dependency>
       <groupId>org.springframework.data</groupId>
       <artifactId>spring-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-commons</artifactId>
     </dependency>
     <dependency>
       <groupId>jakarta.persistence</groupId>

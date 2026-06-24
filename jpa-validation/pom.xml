@@ -16,6 +16,10 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>rsql-jpa-search-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>rsql-jpa-search-core</artifactId>
     </dependency>
     <dependency>
