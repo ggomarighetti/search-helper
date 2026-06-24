@@ -227,7 +227,28 @@ jobs:
 
           version="${{ steps.release.outputs.version }}"
           mkdir -p release-assets
-          cp target/bom.json "release-assets/rsql-jpa-search-${version}-aggregate-cyclonedx.json"
+          aggregate_sbom="release-assets/rsql-jpa-search-${version}-aggregate-cyclonedx.json"
+          cp target/bom.json "${aggregate_sbom}"
+          python3 - "${aggregate_sbom}" "${version}" <<'PY'
+          import json
+          import sys
+          import uuid
+
+          path, version = sys.argv[1], sys.argv[2]
+          with open(path, encoding="utf-8") as file:
+              bom = json.load(file)
+
+          if bom.get("bomFormat") == "CycloneDX" and not bom.get("serialNumber"):
+              serial = uuid.uuid5(
+                  uuid.NAMESPACE_URL,
+                  f"https://github.com/ggomarighetti/rsql-jpa-search/releases/tag/v{version}/aggregate-cyclonedx",
+              )
+              bom["serialNumber"] = f"urn:uuid:{serial}"
+
+          with open(path, "w", encoding="utf-8") as file:
+              json.dump(bom, file, indent=2)
+              file.write("\n")
+          PY
           cp "target/rsql-jpa-search-parent-${version}.buildinfo" \
             "release-assets/rsql-jpa-search-${version}.buildinfo"
 
