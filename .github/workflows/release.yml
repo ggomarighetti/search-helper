@@ -236,6 +236,31 @@ jobs:
             | xargs -0 sha256sum \
             > "release-assets/rsql-jpa-search-${version}-SHA256SUMS"
 
+      - name: Sign release checksum manifest
+        if: steps.release.outputs.release == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${{ steps.release.outputs.version }}"
+          install -m 700 -d ~/.gnupg
+          printf '%s' "${JRELEASER_GPG_SECRET_KEY}" | gpg --batch --import
+          key_fingerprint="$(gpg --batch --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')"
+          if [[ -z "${key_fingerprint}" ]]; then
+            echo "::error::Could not resolve imported GPG key fingerprint."
+            exit 1
+          fi
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "${JRELEASER_GPG_PASSPHRASE}" \
+            --armor \
+            --detach-sign \
+            --local-user "${key_fingerprint}" \
+            --output "release-assets/rsql-jpa-search-${version}-SHA256SUMS.asc" \
+            "release-assets/rsql-jpa-search-${version}-SHA256SUMS"
+          gpg --armor --export "${key_fingerprint}" \
+            > "release-assets/rsql-jpa-search-release-public-key.asc"
+
       - name: Attest release provenance
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
         id: provenance
@@ -394,6 +419,7 @@ jobs:
             echo "- Existing tag: ${{ steps.release.outputs.tag_exists }}"
             echo "- Parent plus public modules: staged atomically"
             echo "- CycloneDX SBOMs: attached to Maven artifacts"
+            echo "- SHA-256 manifest: signed with the release PGP key"
             echo "- Provenance and SBOM attestations: signed with Sigstore"
             echo "- SHA-256 manifest and buildinfo: attached to the GitHub release"
             echo "- Retired jpa-rsql-search coordinates: not generated"

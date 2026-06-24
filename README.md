@@ -5,6 +5,7 @@
 [![Javadocs](https://javadoc.io/badge2/io.github.ggomarighetti/rsql-jpa-search-api/javadoc.svg)](https://javadoc.io/doc/io.github.ggomarighetti/rsql-jpa-search-api)
 [![GitHub Release](https://img.shields.io/github/v/release/ggomarighetti/rsql-jpa-search?display_name=tag)](https://github.com/ggomarighetti/rsql-jpa-search/releases)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/ggomarighetti/rsql-jpa-search/badge)](https://scorecard.dev/viewer/?uri=github.com/ggomarighetti/rsql-jpa-search)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13353/badge)](https://www.bestpractices.dev/projects/13353)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-007396)](https://adoptium.net/)
 [![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.x-6DB33F)](https://spring.io/projects/spring-boot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
