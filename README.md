@@ -62,33 +62,29 @@ logic. It is useful when an endpoint needs dynamic filtering but should not grow
 a new query parameter for every possible field/operator pair. A single query
 string can describe nested `AND` / `OR` expressions:
 
-<table>
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead>
-<tr>
-<th width="50%">RSQL query</th>
-<th width="50%">Logical meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td width="50%" valign="top">
-<pre><code>(name=ilike=phone,sku==ABC-123);price=ge=500;status=in=(ACTIVE,DRAFT)</code></pre>
-</td>
-<td width="50%" valign="top">
-<pre><code>AND
-|-- OR
-|   |-- name ILIKE "phone"
-|   `-- sku EQUAL "ABC-123"
-|-- price GREATER_THAN_OR_EQUAL 500
-`-- status IN ["ACTIVE", "DRAFT"]</code></pre>
-</td>
-</tr>
-</tbody>
-</table>
+```mermaid
+flowchart LR
+    subgraph queryBox["RSQL Query"]
+        direction TB
+        query["'(name=ilike=phone,sku==ABC);status==ACTIVE'"]
+    end
+
+    subgraph treeBox["Logical AST"]
+        direction LR
+        root["AND"]
+        either["OR"]
+        nameMatch["name ILIKE phone"]
+        skuMatch["sku EQUAL ABC"]
+        statusMatch["status EQUAL ACTIVE"]
+
+        root --> either
+        either --> nameMatch
+        either --> skuMatch
+        root --> statusMatch
+    end
+
+    queryBox -- means --> treeBox
+```
 
 In RSQL, `;` means logical `AND`, `,` means logical `OR`, selectors identify
 public fields, and comparison operators such as `==`, `=in=`, `=ge=`, or
@@ -104,7 +100,7 @@ This project uses
 [nstdio/rsql-parser](https://github.com/nstdio/rsql-parser), a maintained fork
 of the original [jirutka/rsql-parser](https://github.com/jirutka/rsql-parser).
 
-## Why not go from RSQL to JPA directly?
+## Why a Search Contract?
 
 Direct RSQL-to-JPA translation is useful, and this library uses it under the
 hood. It is a good fit when an endpoint has a small trusted surface or when the
@@ -130,6 +126,8 @@ single validated `CompiledSearch<T>`.
 Most Spring Boot applications should start with the starter. It brings in the
 API, core compiler, JPA validation, and default Perplexhub backend.
 
+Add it from Maven Central with Maven:
+
 ```xml
 <dependency>
   <groupId>io.github.ggomarighetti</groupId>
@@ -138,7 +136,7 @@ API, core compiler, JPA validation, and default Perplexhub backend.
 </dependency>
 ```
 
-With Gradle Kotlin DSL:
+Or with Gradle Kotlin DSL:
 
 ```kotlin
 implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.0")
@@ -158,8 +156,11 @@ public interface ProductRepository
 }
 ```
 
-Then declare the API-facing search contract and compile each incoming request
-before calling the repository:
+Then declare the API-facing search contract. In the `execute` method below, the
+incoming filter, query text, and `Pageable` are compiled into a
+`CompiledSearch<Product>`; its validated `Specification` and safe `Pageable`
+are passed to the repository, and the repository returns the resulting
+`Page<Product>`.
 
 ```java
 @Service
@@ -209,21 +210,21 @@ configuration, error handling, customization, architecture, and security guides.
 
 ## Security
 
-Report suspected vulnerabilities privately through
-[GitHub Security Advisories](https://github.com/ggomarighetti/rsql-jpa-search/security/advisories/new);
-do not open a public issue. The supported-version policy, response targets, and
-disclosure process are documented in [SECURITY.md](SECURITY.md).
+If you think you found a vulnerability, please report it privately through
+[GitHub Security Advisories](https://github.com/ggomarighetti/rsql-jpa-search/security/advisories/new)
+instead of opening a public issue. For ordinary bugs, documentation problems,
+or feature requests, use GitHub issues.
 
-Release assets include SHA-256 checksums, CycloneDX SBOMs, build information,
-and Sigstore attestations. Verification instructions are in
-[RELEASE_SECURITY.md](docs/RELEASE_SECURITY.md), and the project's OpenSSF
-control mapping is in [OPENSSF.md](docs/OPENSSF.md).
+The supported-version policy and disclosure process are documented in
+[SECURITY.md](SECURITY.md).
 
 ## Contributing
 
 Issues, bug reports, documentation improvements, and pull requests are welcome.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, review
-policy, Conventional Commit rules, and required DCO sign-off.
+
+The development workflow, review policy, pull request standards, Conventional
+Commit rules, and required DCO sign-off are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

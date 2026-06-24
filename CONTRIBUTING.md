@@ -48,13 +48,28 @@ Generate and validate release SBOMs:
 - Do not weaken validation, protection limits, CI permissions, or release
   integrity without an explicit security rationale.
 
-Pull request titles follow Conventional Commits, for example:
+Pull request titles and human-authored commit messages must follow
+Conventional Commits, for example:
 
 ```text
 feat(core): add bounded operator support
 fix(parser): reject malformed selector escapes
 docs(security): clarify vulnerability reporting
 ```
+
+## Pull requests
+
+Keep pull requests focused and use the repository pull request template. The
+body should include:
+
+- `### Resume`: what changed and why.
+- `### Evidence`: checks, tests, screenshots, or other verification performed.
+- `### Reference`: related issues, discussions, documentation, or follow-up
+  work.
+
+Use `N/A` when a section does not apply. Do not include secrets, private
+vulnerability details, generated artifacts, or internal working notes in the PR
+body.
 
 ## Developer Certificate of Origin
 
